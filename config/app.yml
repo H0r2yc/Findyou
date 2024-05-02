@@ -1,0 +1,64 @@
+api:
+  searchPageSize: 100
+  searchLimitCount: 1000
+  fofa:
+    key: yiheng6221@163.com:093208d32a4b0202b925240b81e9b739
+  icp:
+    key: ""
+  quake:
+    key: ""
+  hunter:
+    key: ""
+portscan:
+  ping: false
+  port: --top-ports 1000
+  rate: 1000
+  tech: -sS
+  cmdbin: nmap
+cdnconfig:
+  threads: 1000
+httpx:
+  HTTPProxy: ""
+  WebThreads: 200
+  WebTimeout: 10
+fingerprint:
+  httpx: true
+  screenshot: true
+  fingerprinthub: true
+  iconhash: true
+  fingerprintx: true
+domainscan:
+  resolver: resolver.txt
+  wordlist: subnames.txt
+  providerConfig: provider-config.yml
+  subfinder: true
+  subdomainBrute: true
+  subdomainCrawler: false
+  ignoreCDN: false
+  ignoreOutofChina: true
+  portscan: false
+  whois: true
+  icp: true
+onlineapi:
+  fofa: true
+  quake: false
+  hunter: false
+pocscan:
+  xray:
+    pocPath: thirdparty/xray/xray/pocs
+  nuclei:
+    pocPath: thirdparty/nuclei/nuclei-templates
+  goby:
+    authUser: goby
+    authPass: goby
+    api:
+      - http://127.0.0.1:8361
+proxy:
+  host: []
+
+database:
+  host: 127.0.0.1
+  port: 3306
+  name: Findyou
+  username: nbanb
+  password: nbanbpro

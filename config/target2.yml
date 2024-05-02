@@ -1,0 +1,42 @@
+目标:
+  名称:
+    - "行吟科技"
+    -
+    # 目标域名:xxx.com,xxx.com,xxx.com
+  域名:
+    - "xiaohongshu.com"
+    -
+    # 目标ip:1.1.1.1,1.1.1.1/24
+  ip:
+    - ""
+    -
+  cert:
+  city:
+  gobal_keyword:
+    - "行吟"
+    - "小红书"
+    -
+
+公司架构设置:
+  占股子公司比例: 50
+  全资控股公司是否递归查找: true
+  递归等级: 3
+
+自定义语法扫描:
+  # 语法自定义:
+  #  - body="kkkkkk"
+  #  - title="kkkkkk"
+  fofa:
+    - ""
+    -
+    -
+  hunter:
+    -
+    -
+    -
+  quake:
+    - ""
+    -
+poc扫描:
+  启用: false
+  指定漏洞: ""
