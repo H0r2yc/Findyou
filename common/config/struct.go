@@ -18,7 +18,14 @@ type Targets struct {
 	IPs             []string
 	DomainIPMap     map[string][]string
 	DomainIPMapLock sync.Mutex
-	Isdone          []string
+	SearchCount     uint
+	SearchStatus    uint
+}
+
+type SearchKeyWords struct {
+	KeyWords     []string
+	SearchCount  []uint
+	SearchStatus []uint
 }
 
 // -------------------------------------

@@ -1,14 +1,5 @@
 package db
 
-type Dbtables struct {
-	Company     Company
-	Domain      Domain
-	IP          IPs
-	Fingerprint Fingerprint
-	Targets     Targets
-	URL         URLs
-}
-
 type DBdata struct {
 	TableName  string
 	ColumnLen  int
@@ -24,7 +15,7 @@ type Company struct {
 	ID     uint `gorm:"primaryKey"`
 	Name   string
 	URLs   []URLs
-	Isdone uint
+	Status uint
 }
 
 type Domain struct {
@@ -32,13 +23,13 @@ type Domain struct {
 	Domain string
 	IP     string
 	ISCdn  uint
-	Isdone uint
+	Status uint
 }
 
 type IPs struct {
 	ID     uint `gorm:"primaryKey"`
 	IP     string
-	Isdone uint
+	Status uint
 }
 
 type Fingerprint struct {
@@ -50,18 +41,19 @@ type Fingerprint struct {
 type Targets struct {
 	ID     uint `gorm:"primaryKey"`
 	Target string
-	Isdone uint
+	Status uint
 }
 
 type URLs struct {
 	ID        uint `gorm:"primaryKey"`
 	CompanyID uint // 外键，指向 Company 表中的记录
 	Url       string
-	Isdone    uint
+	Status    uint
 }
 
-type Search struct {
+type SearchKeywords struct {
 	ID            uint `gorm:"primaryKey"`
 	SearchKeyword string
-	success       uint
+	Count         uint
+	Status        uint
 }

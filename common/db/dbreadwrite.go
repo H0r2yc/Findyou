@@ -48,6 +48,8 @@ func ItemTODB(dbdatas, dbdatas2, dbdatas3, dbdatas4 DBdata) error {
 		record = &Targets{}
 	case "URLs":
 		record = &URLs{}
+	case "SearchKeywords":
+		record = &SearchKeywords{}
 	}
 	//判断写入的数量以及写入的类型为string还是uint并写入到record
 	records = getrecord(record, dbdatas, dbdatas2, dbdatas3, dbdatas4)
@@ -198,23 +200,23 @@ func GetAllDomains() ([]string, error) {
 	return domainStrings, nil
 }
 
-// GetAllTargets 从数据库中取出所有 isdone 为 0 的数据
+// GetAllTargets 从数据库中取出所有 Status 为 0 的数据
 func GetAllTargets() ([]Targets, error) {
 	db := getDB()
 	var targets []Targets
-	result := db.Where("Isdone = ?", 0).Find(&targets)
+	result := db.Where("Status = ?", 0).Find(&targets)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return targets, nil
 }
 
-// ProcessTargets 处理从数据库中取出的数据，并将 isdone 设置为 1
+// ProcessTargets 处理从数据库中取出的数据，并将 Status 设置为 1
 func ProcessTargets(target *Targets, status uint) error {
 	db := getDB()
 	// 处理 targets
-	// 设置 isdone 为 1
-	if err := db.Model(target).Update("Isdone", status).Error; err != nil {
+	// 设置 Status 为 1
+	if err := db.Model(target).Update("Status", status).Error; err != nil {
 		return err
 	}
 	return nil

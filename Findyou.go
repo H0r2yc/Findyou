@@ -34,6 +34,7 @@ func workflowrun() {
 	//TODO: 爱企查及企查查接口获取目标单位信息
 	//搜索引擎搜索
 	startenginesearch(appconfig, targetconfig)
+	//TODO 域名及CDN处理入库
 	//TODO 域名爆破
 	//TODO 重点IP做单独的端口扫描，1.真实的解析ip2.搜索结果较多的ip3.targets中最多端口的域名或ip
 	//Done Httpx做扫描

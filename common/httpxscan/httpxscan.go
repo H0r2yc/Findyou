@@ -40,7 +40,7 @@ func Httpxscan(appconfig *config.Appconfig) {
 		OnResult: func(r runner.Result) {
 			// handle error
 			if r.Err != nil {
-				gologger.Error().Msgf("[Err] %s: %s\n", r.Input, r.Err)
+				gologger.Error().Msgf("%s: %s\n", r.Input, r.Err)
 				//查找target
 				target, err := db.GetTargetID(targets, r.URL)
 				if err != nil {

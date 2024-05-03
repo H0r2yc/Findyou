@@ -99,7 +99,7 @@ func checkDatabaseAndTables(db *gorm.DB) error {
 	db.Exec("USE Findyou")
 
 	// 检查表格是否存在，如果不存在则执行迁移
-	if err := db.AutoMigrate(&Company{}, &Domain{}, &IPs{}, &Fingerprint{}, &Targets{}, &URLs{}); err != nil {
+	if err := db.AutoMigrate(&Company{}, &Domain{}, &IPs{}, &Fingerprint{}, &Targets{}, &URLs{}, &SearchKeywords{}); err != nil {
 		return fmt.Errorf("failed to migrate tables: %w", err)
 	}
 

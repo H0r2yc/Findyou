@@ -75,6 +75,8 @@ func CheckDuplicateRecord(database *gorm.DB, tableName string, columnName string
 		existingRecord = &Targets{}
 	case "URLs":
 		existingRecord = &URLs{}
+	case "SearchKeywords":
+		existingRecord = &SearchKeywords{}
 	default:
 		return false, fmt.Errorf("invalid table name: %s", tableName)
 	}
