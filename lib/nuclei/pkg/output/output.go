@@ -32,10 +32,6 @@ import (
 	osutils "github.com/projectdiscovery/utils/os"
 )
 
-var Results []ResultEvent
-var ResultsLock sync.Mutex
-var AddResultCallback func(result ResultEvent)
-
 // Writer is an interface which writes output to somewhere for nuclei events.
 type Writer interface {
 	// Close closes the output writer interface
@@ -77,6 +73,10 @@ var decolorizerRegex = regexp.MustCompile(`\x1B\[[0-9;]*[a-zA-Z]`)
 // InternalEvent is an internal output generation structure for nuclei.
 type InternalEvent map[string]interface{}
 
+func (ie InternalEvent) Set(k string, v interface{}) {
+	ie[k] = v
+}
+
 // InternalWrappedEvent is a wrapped event with operators result added to it.
 type InternalWrappedEvent struct {
 	// Mutex is internal field which is implicitly used
@@ -112,11 +112,6 @@ func (iwe *InternalWrappedEvent) SetOperatorResult(operatorResult *operators.Res
 	defer iwe.Unlock()
 
 	iwe.OperatorsResult = operatorResult
-}
-
-type RequestResponsePair struct {
-	Request string
-	Response string
 }
 
 // ResultEvent is a wrapped result event for a single nuclei output.
@@ -158,8 +153,6 @@ type ResultEvent struct {
 	Request string `json:"request,omitempty"`
 	// Response is the optional, dumped response for the match.
 	Response string `json:"response,omitempty"`
-	// Packet is the optional, dumped requests and responses for the match. The request and response are one-to-one.
-	Packet map[int]RequestResponsePair `json:"packet,omitempty"`
 	// Metadata contains any optional metadata for the event
 	Metadata map[string]interface{} `json:"meta,omitempty"`
 	// IP is the IP address for the found result event.
@@ -176,8 +169,21 @@ type ResultEvent struct {
 	// Lines is the line count for the specified match
 	Lines []int `json:"matched-line,omitempty"`
 
+	// IssueTrackers is the metadata for issue trackers
+	IssueTrackers map[string]IssueTrackerMetadata `json:"issue_trackers,omitempty"`
+	// ReqURLPattern when enabled contains base URL pattern that was used to generate the request
+	// must be enabled by setting protocols.ExecuterOptions.ExportReqURLPattern to true
+	ReqURLPattern string `json:"req_url_pattern,omitempty"`
+
 	FileToIndexPosition map[string]int `json:"-"`
 	Error               string         `json:"error,omitempty"`
+}
+
+type IssueTrackerMetadata struct {
+	// IssueID is the ID of the issue created
+	IssueID string `json:"id,omitempty"`
+	// IssueURL is the URL of the issue created
+	IssueURL string `json:"url,omitempty"`
 }
 
 // NewStandardWriter creates a new output writer based on user configurations
@@ -246,11 +252,6 @@ func (w *StandardWriter) Write(event *ResultEvent) error {
 	}
 
 	event.Timestamp = time.Now()
-
-	AddResultCallback(*event)
-	ResultsLock.Lock()
-	Results = append(Results, *event)
-	ResultsLock.Unlock()
 
 	var data []byte
 	var err error

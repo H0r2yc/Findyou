@@ -8,7 +8,7 @@ import (
 )
 
 func Httpxscan(appconfig *config.Appconfig) {
-	targets, err := db.GetAllTargets()
+	targets, err := db.GetAllTargets(0)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}

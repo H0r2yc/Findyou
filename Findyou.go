@@ -3,6 +3,7 @@ package main
 import (
 	"Findyou/common/config"
 	"Findyou/common/httpxscan"
+	"Findyou/common/nuclei"
 	"Findyou/common/onlineengine"
 	"fmt"
 	"strings"
@@ -35,12 +36,13 @@ func workflowrun() {
 	//搜索引擎搜索
 	startenginesearch(appconfig, targetconfig)
 	//TODO 域名及CDN处理入库
-	//TODO 域名爆破
+	//TODO 域名爆破，超过一百个就立即删除否则会爆内存
 	//TODO 重点IP做单独的端口扫描，1.真实的解析ip2.搜索结果较多的ip3.targets中最多端口的域名或ip
 	//Done Httpx做扫描
 	httpxscan.Httpxscan(appconfig)
 	//TODO 域名绑定资产发现
-	//TODO 目录扫描，常见目录比如子域名同名目录，app，test,login等
+	//TODO 目录扫描，常见目录比如子域名同名目录，app，test,login等,后面更方便进行指纹识别
 	//TODO 指纹识别
+	nuclei.NucleiScan(appconfig)
 	//TODO Poc识别
 }

@@ -21,6 +21,8 @@ httpx:
   HTTPProxy: ""
   WebThreads: 200
   WebTimeout: 10
+nuclei:
+  Threads: 10
 fingerprint:
   httpx: true
   screenshot: true

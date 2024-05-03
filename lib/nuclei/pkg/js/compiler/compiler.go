@@ -10,6 +10,7 @@ import (
 
 	"github.com/projectdiscovery/nuclei/v3/pkg/protocols/common/generators"
 	contextutil "github.com/projectdiscovery/utils/context"
+	stringsutil "github.com/projectdiscovery/utils/strings"
 )
 
 // Compiler provides a runtime to execute goja runtime
@@ -33,6 +34,13 @@ type ExecuteOptions struct {
 
 	/// Timeout for this script execution
 	Timeout int
+	// Source is original source of the script
+	Source *string
+
+	Context context.Context
+
+	// Manually exported objects
+	exports map[string]interface{}
 }
 
 // ExecuteArgs is the arguments to pass to the script.
@@ -67,17 +75,17 @@ func (e ExecuteResult) GetSuccess() bool {
 
 // Execute executes a script with the default options.
 func (c *Compiler) Execute(code string, args *ExecuteArgs) (ExecuteResult, error) {
-	p, err := goja.Compile("", code, false)
+	p, err := WrapScriptNCompile(code, false)
 	if err != nil {
 		return nil, err
 	}
-	return c.ExecuteWithOptions(p, args, &ExecuteOptions{})
+	return c.ExecuteWithOptions(p, args, &ExecuteOptions{Context: context.Background()})
 }
 
 // ExecuteWithOptions executes a script with the provided options.
 func (c *Compiler) ExecuteWithOptions(program *goja.Program, args *ExecuteArgs, opts *ExecuteOptions) (ExecuteResult, error) {
 	if opts == nil {
-		opts = &ExecuteOptions{}
+		opts = &ExecuteOptions{Context: context.Background()}
 	}
 	if args == nil {
 		args = NewExecuteArgs()
@@ -99,7 +107,7 @@ func (c *Compiler) ExecuteWithOptions(program *goja.Program, args *ExecuteArgs, 
 	}
 
 	// execute with context and timeout
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(opts.Timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(opts.Context, time.Duration(opts.Timeout)*time.Second)
 	defer cancel()
 	// execute the script
 	results, err := contextutil.ExecFuncWithTwoReturns(ctx, func() (val goja.Value, err error) {
@@ -108,10 +116,33 @@ func (c *Compiler) ExecuteWithOptions(program *goja.Program, args *ExecuteArgs, 
 				err = fmt.Errorf("panic: %v", r)
 			}
 		}()
-		return executeProgram(program, args, opts)
+		return ExecuteProgram(program, args, opts)
 	})
 	if err != nil {
 		return nil, err
 	}
-	return ExecuteResult{"response": results.Export(), "success": results.ToBoolean()}, nil
+	var res ExecuteResult
+	if opts.exports != nil {
+		res = ExecuteResult(opts.exports)
+		opts.exports = nil
+	} else {
+		res = NewExecuteResult()
+	}
+	res["response"] = results.Export()
+	res["success"] = results.ToBoolean()
+	return res, nil
+}
+
+// Wraps a script in a function and compiles it.
+func WrapScriptNCompile(script string, strict bool) (*goja.Program, error) {
+	if !stringsutil.ContainsAny(script, exportAsToken, exportToken) {
+		// this will not be run in a pooled runtime
+		return goja.Compile("", script, strict)
+	}
+	val := fmt.Sprintf(`
+		(function() {
+			%s
+		})()
+	`, script)
+	return goja.Compile("", val, strict)
 }

@@ -1,7 +1,7 @@
 package protocols
 
 import (
-	"embed"
+	"context"
 	"encoding/base64"
 	"sync/atomic"
 
@@ -11,9 +11,11 @@ import (
 
 	"github.com/logrusorgru/aurora"
 
+	"github.com/projectdiscovery/nuclei/v3/pkg/authprovider"
 	"github.com/projectdiscovery/nuclei/v3/pkg/catalog"
 	"github.com/projectdiscovery/nuclei/v3/pkg/input"
 	"github.com/projectdiscovery/nuclei/v3/pkg/js/compiler"
+	"github.com/projectdiscovery/nuclei/v3/pkg/loader/parser"
 	"github.com/projectdiscovery/nuclei/v3/pkg/model"
 	"github.com/projectdiscovery/nuclei/v3/pkg/operators"
 	"github.com/projectdiscovery/nuclei/v3/pkg/operators/extractors"
@@ -33,7 +35,9 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/types"
 )
 
-var MaxTemplateFileSizeForEncoding = 1024 * 1024
+var (
+	MaxTemplateFileSizeForEncoding = 1024 * 1024
+)
 
 // Executer is an interface implemented any protocol based request executer.
 type Executer interface {
@@ -107,10 +111,36 @@ type ExecutorOptions struct {
 	templateCtxStore *mapsutil.SyncLockMap[string, *contextargs.Context]
 	// JsCompiler is abstracted javascript compiler which adds node modules and provides execution
 	// environment for javascript templates
-	JsCompiler        *compiler.Compiler
-	TargetAndPocsName map[string][]string
-	EmbedPocs         embed.FS
-	EnableSeverities  []string
+	JsCompiler *compiler.Compiler
+	// AuthProvider is a provider for auth strategies
+	AuthProvider authprovider.AuthProvider
+	//TemporaryDirectory is the directory to store temporary files
+	TemporaryDirectory string
+	Parser             parser.Parser
+	// ExportReqURLPattern exports the request URL pattern
+	// in ResultEvent it contains the exact url pattern (ex: {{BaseURL}}/{{randstr}}/xyz) used in the request
+	ExportReqURLPattern bool
+}
+
+// todo: centralizing components is not feasible with current clogged architecture
+// a possible approach could be an internal event bus with pub-subs? This would be less invasive than
+// reworking dep injection from scratch
+func (eo *ExecutorOptions) RateLimitTake() {
+	if eo.RateLimiter.GetLimit() != uint(eo.Options.RateLimit) {
+		eo.RateLimiter.SetLimit(uint(eo.Options.RateLimit))
+		eo.RateLimiter.SetDuration(eo.Options.RateLimitDuration)
+	}
+	eo.RateLimiter.Take()
+}
+
+// GetThreadsForPayloadRequests returns the number of threads to use as default for
+// given max-request of payloads
+func (e *ExecutorOptions) GetThreadsForNPayloadRequests(totalRequests int, currentThreads int) int {
+	if currentThreads > 0 {
+		return currentThreads
+	}
+
+	return e.Options.PayloadConcurrency
 }
 
 // CreateTemplateCtxStore creates template context store (which contains templateCtx for every scan)
@@ -144,7 +174,7 @@ func (e *ExecutorOptions) GetTemplateCtx(input *contextargs.MetaInput) *contexta
 	templateCtx, ok := e.templateCtxStore.Get(scanId)
 	if !ok {
 		// if template context does not exist create new and add it to store and return it
-		templateCtx = contextargs.New()
+		templateCtx = contextargs.New(context.Background())
 		templateCtx.MetaInput = input
 		_ = e.templateCtxStore.Set(scanId, templateCtx)
 	}

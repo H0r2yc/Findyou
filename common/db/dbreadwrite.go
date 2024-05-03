@@ -201,10 +201,10 @@ func GetAllDomains() ([]string, error) {
 }
 
 // GetAllTargets 从数据库中取出所有 Status 为 0 的数据
-func GetAllTargets() ([]Targets, error) {
+func GetAllTargets(status uint) ([]Targets, error) {
 	db := getDB()
 	var targets []Targets
-	result := db.Where("Status = ?", 0).Find(&targets)
+	result := db.Where("Status = ?", status).Find(&targets)
 	if result.Error != nil {
 		return nil, result.Error
 	}

@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -18,6 +17,7 @@ import (
 )
 
 // Match matches a generic data response again a given matcher
+// TODO: Try to consolidate this in protocols.MakeDefaultMatchFunc to avoid any inconsistencies
 func (request *Request) Match(data map[string]interface{}, matcher *matchers.Matcher) (bool, []string) {
 	item, ok := request.getMatchPart(matcher.Part, data)
 	if !ok && matcher.Type.MatcherType != matchers.DSLMatcher {
@@ -112,21 +112,21 @@ func (request *Request) responseToDSLMap(resp *http.Response, host, matched, raw
 		data[k] = v
 	}
 	for _, cookie := range resp.Cookies() {
-		data[strings.ToLower(cookie.Name)] = cookie.Value
+		request.setHashOrDefault(data, strings.ToLower(cookie.Name), cookie.Value)
 	}
 	for k, v := range resp.Header {
 		k = strings.ToLower(strings.ReplaceAll(strings.TrimSpace(k), "-", "_"))
-		data[k] = strings.Join(v, " ")
+		request.setHashOrDefault(data, k, strings.Join(v, " "))
 	}
 	data["host"] = host
 	data["type"] = request.Type().String()
 	data["matched"] = matched
-	data["request"] = rawReq
-	data["response"] = rawResp
+	request.setHashOrDefault(data, "request", rawReq)
+	request.setHashOrDefault(data, "response", rawResp)
 	data["status_code"] = resp.StatusCode
-	data["body"] = body
-	data["all_headers"] = headers
-	data["header"] = headers
+	request.setHashOrDefault(data, "body", body)
+	request.setHashOrDefault(data, "all_headers", headers)
+	request.setHashOrDefault(data, "header", headers)
 	data["duration"] = duration.Seconds()
 	data["template-id"] = request.options.TemplateID
 	data["template-info"] = request.options.TemplateInfo
@@ -138,6 +138,15 @@ func (request *Request) responseToDSLMap(resp *http.Response, host, matched, raw
 		data["stop-at-first-match"] = true
 	}
 	return data
+}
+
+// TODO: disabling hdd storage while testing backpressure mechanism
+func (request *Request) setHashOrDefault(data output.InternalEvent, k string, v string) {
+	// if hash, err := request.options.Storage.SetString(v); err == nil {
+	// 	data[k] = hash
+	// } else {
+	data[k] = v
+	//}
 }
 
 // MakeResultEvent creates a result event from internal wrapped event
@@ -156,24 +165,6 @@ func (request *Request) MakeResultEventItem(wrapped *output.InternalWrappedEvent
 	}
 	if types.ToString(wrapped.InternalEvent["path"]) != "" {
 		fields.Path = types.ToString(wrapped.InternalEvent["path"])
-	}
-	Packet := make(map[int]output.RequestResponsePair)
-	index := 1
-	for true{
-		d := output.RequestResponsePair{}
-		reqT,reqOK := wrapped.InternalEvent[fmt.Sprintf("request_%v",index)]
-		rspT,rspOK := wrapped.InternalEvent[fmt.Sprintf("response_%v",index)]
-		if !reqOK && !rspOK{
-			break
-		}
-		if reqOK{
-			d.Request = types.ToString(reqT)
-		}
-		if rspOK{
-			d.Response = types.ToString(rspT)
-		}
-		Packet[index] = d
-		index++
 	}
 	data := &output.ResultEvent{
 		TemplateID:       types.ToString(wrapped.InternalEvent["template-id"]),
@@ -196,7 +187,6 @@ func (request *Request) MakeResultEventItem(wrapped *output.InternalWrappedEvent
 		CURLCommand:      types.ToString(wrapped.InternalEvent["curl-command"]),
 		TemplateEncoded:  request.options.EncodeTemplate(),
 		Error:            types.ToString(wrapped.InternalEvent["error"]),
-		Packet: Packet,
 	}
 	return data
 }

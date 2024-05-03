@@ -11,21 +11,26 @@ type Appconfig struct {
 	//Rpc         RPC         `yaml:"rpc"`
 	//FileSync    RPC         `yaml:"fileSync"`
 	//Rabbitmq    Rabbitmq    `yaml:"rabbitmq"`
-	API         API         `yaml:"api"`
-	Portscan    Portscan    `yaml:"portscan"`
-	Fingerprint Fingerprint `yaml:"fingerprint"`
-	Domainscan  Domainscan  `yaml:"domainscan"`
-	OnlineAPI   OnlineAPI   `yaml:"onlineapi"`
-	Pocscan     Pocscan     `yaml:"pocscan"`
-	Proxy       Proxy       `yaml:"proxy"`
-	Database    Database    `yaml:"database"`
-	CDNConfig   CDNConfig   `yaml:"cdnconfig"`
-	Httpxconfig Httpx       `yaml:"httpx"`
+	API          API         `yaml:"api"`
+	Portscan     Portscan    `yaml:"portscan"`
+	Fingerprint  Fingerprint `yaml:"fingerprint"`
+	Domainscan   Domainscan  `yaml:"domainscan"`
+	OnlineAPI    OnlineAPI   `yaml:"onlineapi"`
+	Pocscan      Pocscan     `yaml:"pocscan"`
+	Proxy        Proxy       `yaml:"proxy"`
+	Database     Database    `yaml:"database"`
+	CDNConfig    CDNConfig   `yaml:"cdnconfig"`
+	Httpxconfig  Httpx       `yaml:"httpx"`
+	Nucleiconfig Nuclei      `yaml:"nuclei"`
 }
 
 type PocSet struct {
 	Enable           bool   `yaml:"启用"`
 	PocNameForSearch string `yaml:"指定漏洞"`
+}
+
+type Nuclei struct {
+	Threads int `yaml:"Threads"`
 }
 
 type Httpx struct {
