@@ -13,7 +13,7 @@ func main() {
 	workflowrun()
 }
 
-func LoadConfig() (*config.Appconfig, *config.Targetcofig) {
+func LoadConfig() (*config.Appconfig, *config.Targetconfig) {
 	appconfig := config.GetAppConf()
 	targetconfig := config.GetTargetConf()
 	if appconfig != nil && targetconfig != nil {
@@ -24,24 +24,20 @@ func LoadConfig() (*config.Appconfig, *config.Targetcofig) {
 	return appconfig, targetconfig
 }
 
-func startenginesearch() {
-	onlineengine.SearchEngine()
+func startenginesearch(appconfig *config.Appconfig, targetconfig *config.Targetconfig) {
+	onlineengine.SearchEngine(appconfig, targetconfig)
 	//onlineengine.SearchEngineFromDB()
 }
 
 func workflowrun() {
-	appconfig, _ := LoadConfig()
+	appconfig, targetconfig := LoadConfig()
 	//TODO: 爱企查及企查查接口获取目标单位信息
 	//搜索引擎搜索
-	startenginesearch()
+	startenginesearch(appconfig, targetconfig)
 	//TODO 域名爆破
 	//TODO 重点IP做单独的端口扫描，1.真实的解析ip2.搜索结果较多的ip3.targets中最多端口的域名或ip
 	//Done Httpx做扫描
-	time := 0
-	for time < 3 {
-		httpxscan.Httpxscan(appconfig)
-		time += 1
-	}
+	httpxscan.Httpxscan(appconfig)
 	//TODO 域名绑定资产发现
 	//TODO 目录扫描，常见目录比如子域名同名目录，app，test,login等
 	//TODO 指纹识别

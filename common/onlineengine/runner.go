@@ -6,9 +6,7 @@ import (
 	"github.com/projectdiscovery/gologger"
 )
 
-func SearchEngine() {
-	appconfig := config.GetAppConf()
-	targetlist := config.GetTargetConf()
+func SearchEngine(appconfig *config.Appconfig, targetlist *config.Targetconfig) {
 	// 从Hunter中获取资产
 	//if appconfig.OnlineAPI.IsHunter && !appconfig.OnlineAPI.IsFofa {
 	//	config.GlobalConfig.Targets, _ = uncover.HunterSearch(config.GlobalConfig.Targets)

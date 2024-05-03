@@ -30,7 +30,7 @@ func DBMakeKeyword(datalist, globalkeywords []string, datatype string) []string 
 	return nil
 }
 
-func FofaMakeKeyword(targetlist *config.Targetcofig) []string {
+func FofaMakeKeyword(targetlist *config.Targetconfig) []string {
 	var searchlist []string
 	for _, name := range targetlist.Target.Name {
 		if name != "" {
@@ -65,6 +65,6 @@ func FofaMakeKeyword(targetlist *config.Targetcofig) []string {
 	return nil
 }
 
-func HunterMakeKeyword(targetconfig *config.Targetcofig) []string {
+func HunterMakeKeyword(targetconfig *config.Targetconfig) []string {
 	return nil
 }

@@ -1,6 +1,6 @@
 package config
 
-type Targetcofig struct {
+type Targetconfig struct {
 	Ips             []string
 	Target          Target          `yaml:"目标"`
 	Customizesyntax customizesyntax `yaml:"自定义语法扫描"`

@@ -28,7 +28,7 @@ type FOFAResponseJson struct {
 
 var nildbdatas = db.DBdata{}
 
-func FOFASearch(targetlist *config.Targetcofig, fofakey string, cdnthread int) {
+func FOFASearch(targetlist *config.Targetconfig, fofakey string, cdnthread int) {
 	searchkeywords := FofaMakeKeyword(targetlist)
 	gologger.Info().Msgf("准备从fofa获取数据")
 	for _, keyword := range searchkeywords {

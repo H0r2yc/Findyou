@@ -19,7 +19,7 @@ var configyml = "config/app.yml"
 var RunMode = Release
 var WorkerConfigReloadMutex sync.Mutex // worker读配置文件同步锁
 var appconfig *Appconfig
-var targets *Targetcofig
+var targets *Targetconfig
 
 func GetAppConf() *Appconfig {
 	if appconfig == nil {
@@ -39,9 +39,9 @@ func GetAppConf() *Appconfig {
 	return appconfig
 }
 
-func GetTargetConf() *Targetcofig {
+func GetTargetConf() *Targetconfig {
 	if targets == nil {
-		targets = new(Targetcofig)
+		targets = new(Targetconfig)
 		WorkerConfigReloadMutex.Lock()
 		err := targets.ReadConfig()
 		if err != nil {
@@ -71,7 +71,7 @@ func (config *Appconfig) ReadConfig() error {
 	return err
 }
 
-func (config *Targetcofig) ReadConfig() error {
+func (config *Targetconfig) ReadConfig() error {
 	fileContent, err := os.ReadFile(filepath.Join(GetRootPath(), targetyml))
 	if err != nil {
 		fmt.Println(err)
