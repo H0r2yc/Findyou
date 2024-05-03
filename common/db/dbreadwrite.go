@@ -212,11 +212,11 @@ func GetAllTargets() ([]Targets, error) {
 }
 
 // ProcessTargets 处理从数据库中取出的数据，并将 Status 设置为 1
-func ProcessTargets(target *Targets, status uint) error {
+func ProcessTargets(target *Targets, Title string, status uint) error {
 	db := getDB()
 	// 处理 targets
 	// 设置 Status 为 1
-	if err := db.Model(target).Update("Status", status).Error; err != nil {
+	if err := db.Model(target).Updates(map[string]interface{}{"Status": status, "Title": Title}).Error; err != nil {
 		return err
 	}
 	return nil

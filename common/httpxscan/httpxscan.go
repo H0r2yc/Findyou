@@ -47,7 +47,7 @@ func Httpxscan(appconfig *config.Appconfig) {
 					gologger.Error().Msg(err.Error())
 				}
 				// 如果失败，设置为2
-				err = db.ProcessTargets(target, 2)
+				err = db.ProcessTargets(target, r.Title, 2)
 				if err != nil {
 					gologger.Error().Msgf("Failed to process target: %s", err.Error())
 				}
@@ -59,7 +59,7 @@ func Httpxscan(appconfig *config.Appconfig) {
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
-			err = db.ProcessTargets(target, 1)
+			err = db.ProcessTargets(target, r.Title, 1)
 			if err != nil {
 				gologger.Error().Msgf("Failed to process target: %s", err.Error())
 			}

@@ -41,6 +41,7 @@ type Fingerprint struct {
 type Targets struct {
 	ID     uint `gorm:"primaryKey"`
 	Target string
+	Title  string
 	Status uint
 }
 
