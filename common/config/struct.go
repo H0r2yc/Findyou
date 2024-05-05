@@ -2,7 +2,6 @@ package config
 
 import (
 	"embed"
-	"github.com/lcvvvv/gonmap"
 	"github.com/projectdiscovery/hmap/store/hybrid"
 	"net"
 	"sync"
@@ -11,6 +10,22 @@ import (
 // GlobalIPDomainMap 存储ip->domains的关系
 var GlobalIPDomainMap map[string][]string
 var GlobalIPDomainMapLock sync.Mutex
+
+var Dirs map[string][]string
+var Fingerprints []FingerPEntity
+
+// GlobalURLMap RootURL:URLEntity
+var GlobalURLMap map[string]URLEntity
+var GlobalURLMapLock sync.Mutex
+
+var GlobalHttpBodyHMap *hybrid.HybridMap
+var GlobalHttpHeaderHMap *hybrid.HybridMap
+var GlobalBannerHMap *hybrid.HybridMap
+var WorkFlowDB map[string]WorkFlowEntity
+var GlobalEmbedPocs embed.FS
+
+// GlobalResultMap 存储识别到的指纹
+var GlobalResultMap map[string][]string
 
 type Targets struct {
 	Targets         []string
@@ -26,6 +41,48 @@ type SearchKeyWords struct {
 	KeyWords     []string
 	SearchCount  []uint
 	SearchStatus []uint
+}
+
+type WorkFlowEntity struct {
+	RootType bool
+	DirType  bool
+	BaseType bool
+	PocsName []string
+}
+
+type FingerPEntity struct {
+	ProductName      string
+	AllString        string
+	Rule             []RuleData
+	IsExposureDetect bool
+}
+
+type RuleData struct {
+	Start int
+	End   int
+	Op    int16  // 0= 1!= 2== 3>= 4<= 5~=
+	Key   string // body="123"中的body
+	Value string // body="123"中的123
+	All   string // body="123"
+}
+
+type URLEntity struct {
+	IP       string
+	Port     int
+	WebPaths map[string]UrlPathEntity
+	Cert     string // TLS证书
+}
+
+type UrlPathEntity struct {
+	// Path             string // 根目录为/
+	Hash             string // md5
+	IconHash         string //mmh3
+	Title            string
+	StatusCode       int
+	ContentType      string
+	Server           string
+	ContentLength    int
+	HeaderHashString string
 }
 
 // -------------------------------------
@@ -105,110 +162,3 @@ type CDNResult struct {
 }
 
 var GlobalConfig DDConfig
-
-var GlobalEmbedPocs embed.FS
-
-var GlobalBannerHMap *hybrid.HybridMap
-
-// GlobalIPPortMap IP:Port : Protocol
-var GlobalIPPortMap map[string]string
-var GlobalIPPortMapLock sync.Mutex
-
-type PortEntity struct {
-	Protocol   string // 协议
-	BannerHash string // 响应
-}
-
-type ProtocolResult struct {
-	IP       string
-	Port     int
-	Status   int
-	Response *gonmap.Response
-}
-
-type UrlPathEntity struct {
-	// Path             string // 根目录为/
-	Hash             string // md5
-	IconHash         string //mmh3
-	Title            string
-	StatusCode       int
-	ContentType      string
-	Server           string
-	ContentLength    int
-	HeaderHashString string
-}
-
-type URLEntity struct {
-	IP       string
-	Port     int
-	WebPaths map[string]UrlPathEntity
-	Cert     string // TLS证书
-}
-
-// GlobalURLMap RootURL:URLEntity
-var GlobalURLMap map[string]URLEntity
-var GlobalURLMapLock sync.Mutex
-
-var GlobalHttpBodyHMap *hybrid.HybridMap
-var GlobalHttpHeaderHMap *hybrid.HybridMap
-
-type RuleData struct {
-	Start int
-	End   int
-	Op    int16  // 0= 1!= 2== 3>= 4<= 5~=
-	Key   string // body="123"中的body
-	Value string // body="123"中的123
-	All   string // body="123"
-}
-
-type WorkFlowEntity struct {
-	RootType bool
-	DirType  bool
-	BaseType bool
-	PocsName []string
-}
-
-type PasswordDatabaseEntity struct {
-	Keys      []string
-	Passwords []string
-	Hints     []string
-}
-
-type FingerPEntity struct {
-	ProductName      string
-	AllString        string
-	Rule             []RuleData
-	IsExposureDetect bool
-}
-
-var FingerprintDB []FingerPEntity
-var WorkFlowDB map[string]WorkFlowEntity
-var DirDB map[string][]string
-
-// GlobalResultMap 存储识别到的指纹
-var GlobalResultMap map[string][]string
-
-type GoPocsResultType struct {
-	PocName     string
-	Security    string
-	Description string
-	Target      string
-	InfoLeft    string
-	InfoRight   string
-}
-
-// GoPocsResults 存储Go Poc的输出
-var GoPocsResults []GoPocsResultType
-
-type UserPasswd struct {
-	UserName string
-	Password string
-}
-
-type HostInfo struct {
-	Host     string
-	Ports    string
-	Url      string
-	InfoStr  []string
-	UserPass []string
-}

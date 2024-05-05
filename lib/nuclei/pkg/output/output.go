@@ -32,6 +32,10 @@ import (
 	osutils "github.com/projectdiscovery/utils/os"
 )
 
+var Results []ResultEvent
+var ResultsLock sync.Mutex
+var AddResultCallback func(result ResultEvent)
+
 // Writer is an interface which writes output to somewhere for nuclei events.
 type Writer interface {
 	// Close closes the output writer interface
@@ -114,6 +118,11 @@ func (iwe *InternalWrappedEvent) SetOperatorResult(operatorResult *operators.Res
 	iwe.OperatorsResult = operatorResult
 }
 
+type RequestResponsePair struct {
+	Request  string
+	Response string
+}
+
 // ResultEvent is a wrapped result event for a single nuclei output.
 type ResultEvent struct {
 	// Template is the relative filename for the template
@@ -155,6 +164,8 @@ type ResultEvent struct {
 	Response string `json:"response,omitempty"`
 	// Metadata contains any optional metadata for the event
 	Metadata map[string]interface{} `json:"meta,omitempty"`
+	// Packet is the optional, dumped requests and responses for the match. The request and response are one-to-one.
+	Packet map[int]RequestResponsePair `json:"packet,omitempty"`
 	// IP is the IP address for the found result event.
 	IP string `json:"ip,omitempty"`
 	// Timestamp is the time the result was found at.
@@ -174,6 +185,14 @@ type ResultEvent struct {
 	// ReqURLPattern when enabled contains base URL pattern that was used to generate the request
 	// must be enabled by setting protocols.ExecuterOptions.ExportReqURLPattern to true
 	ReqURLPattern string `json:"req_url_pattern,omitempty"`
+
+	// Fields related to HTTP Fuzzing functionality of nuclei.
+	// The output contains additional fields when the result is
+	// for a fuzzing template.
+	IsFuzzingResult  bool   `json:"is_fuzzing_result,omitempty"`
+	FuzzingMethod    string `json:"fuzzing_method,omitempty"`
+	FuzzingParameter string `json:"fuzzing_parameter,omitempty"`
+	FuzzingPosition  string `json:"fuzzing_position,omitempty"`
 
 	FileToIndexPosition map[string]int `json:"-"`
 	Error               string         `json:"error,omitempty"`

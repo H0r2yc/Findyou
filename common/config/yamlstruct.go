@@ -92,7 +92,7 @@ type Portscan struct {
 }
 
 type Fingerprint struct {
-	IsHttpx          bool `yaml:"httpx"`
+	IsDirsearch      bool `yaml:"dirsearch"`
 	IsScreenshot     bool `yaml:"screenshot"`
 	IsFingerprintHub bool `yaml:"fingerprinthub"`
 	IsIconHash       bool `yaml:"iconhash"`
@@ -108,7 +108,8 @@ type Database struct {
 }
 
 type Pocscan struct {
-	Xray struct {
+	Enable bool `yaml:"enable"`
+	Xray   struct {
 		PocPath string `yaml:"pocPath"`
 	} `yaml:"xray"`
 	Nuclei struct {

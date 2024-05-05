@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/projectdiscovery/gologger"
 	"strings"
 )
 
@@ -12,7 +11,7 @@ func GetCIDR(ip string) string {
 		cidr := strings.Join(parts[:3], ".") + "."
 		return cidr
 	} else {
-		gologger.Error().Msgf("Error: parts slice length is less than 3: %v", parts)
+		//gologger.Error().Msgf("Error: parts slice length is less than 3: %v", parts)
 		return ""
 	}
 }

@@ -38,18 +38,18 @@ func ItemTODB(dbdatas, dbdatas2, dbdatas3, dbdatas4 DBdata) error {
 	switch dbdatas.TableName {
 	case "Company":
 		record = &Company{}
-	case "Domain":
-		record = &Domain{}
+	case "Domains":
+		record = &Domains{}
 	case "IPs":
 		record = &IPs{}
-	case "Fingerprint":
-		record = &Fingerprint{}
+	case "Fingerprints":
+		record = &Fingerprints{}
 	case "Targets":
 		record = &Targets{}
 	case "URLs":
 		record = &URLs{}
-	case "SearchKeywords":
-		record = &SearchKeywords{}
+	case "Keywords":
+		record = &Keywords{}
 	}
 	//判断写入的数量以及写入的类型为string还是uint并写入到record
 	records = getrecord(record, dbdatas, dbdatas2, dbdatas3, dbdatas4)
@@ -59,14 +59,16 @@ func ItemTODB(dbdatas, dbdatas2, dbdatas3, dbdatas4 DBdata) error {
 			gologger.Error().Msgf("Failed to create %s record: %v\n", dbdatas.TableName, err)
 		}
 	}
+	CloseDB(database)
 	return nil
 }
 
+// getrecord 目的是为了生成对应的record
 func getrecord(record interface{}, dbdatas, dbdatas2, dbdatas3, dbdatas4 DBdata) []interface{} {
 	var records []interface{}
 	//获取最大id值
-	db := getDB()
-	maxid, err := GetNextTargetID(db)
+	db := GetDB()
+	maxid, err := GetNextTargetID(db, dbdatas.TableName)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}
@@ -153,14 +155,14 @@ func removeFromDBdata(dbdata *DBdata, index int) {
 }
 
 // GetAllIPs 返回所有 IPs 表中的 ID 和 IP
-func GetAllIPs() ([]string, error) {
+func GetAllIPs(status uint) ([]string, error) {
 	var ips []IPs
 	database := GetDB()
 	if database == nil {
 		gologger.Error().Msg("Failed to get database connection")
 	}
 	// 查询整个表
-	result := database.Model(&IPs{}).Find(&ips)
+	result := database.Where("Status = ?", status).Find(&ips)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -171,38 +173,37 @@ func GetAllIPs() ([]string, error) {
 		//idStrings = append(idStrings, strconv.FormatUint(uint64(ip.ID), 10))
 		ipStrings = append(ipStrings, ip.IP)
 	}
-
+	CloseDB(database)
 	//return idStrings, ipStrings, nil
 	return ipStrings, nil
 }
 
 // GetAllDomains 返回所有 IPs 表中的 ID 和 IP
-func GetAllDomains() ([]string, error) {
-	var domains []Domain
+func GetAllDomains(status uint) ([]string, error) {
+	var domains []Domains
 	database := GetDB()
 	if database == nil {
 		gologger.Error().Msg("Failed to get database connection")
 	}
 	// 查询整个表
-	result := database.Model(&Domain{}).Find(&domains)
+	result := database.Where("Status = ?", status).Find(&domains)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
 	//var idStrings []string
 	var domainStrings []string
 	for _, domain := range domains {
 		//idStrings = append(idStrings, strconv.FormatUint(uint64(ip.ID), 10))
 		domainStrings = append(domainStrings, domain.Domain)
 	}
-
+	CloseDB(database)
 	//return idStrings, ipStrings, nil
 	return domainStrings, nil
 }
 
 // GetAllTargets 从数据库中取出所有 Status 为 0 的数据
 func GetAllTargets(status uint) ([]Targets, error) {
-	db := getDB()
+	db := GetDB()
 	var targets []Targets
 	result := db.Where("Status = ?", status).Find(&targets)
 	if result.Error != nil {
@@ -213,7 +214,7 @@ func GetAllTargets(status uint) ([]Targets, error) {
 
 // ProcessTargets 处理从数据库中取出的数据，并将 Status 设置为 1
 func ProcessTargets(target *Targets, Title string, status uint) error {
-	db := getDB()
+	db := GetDB()
 	// 处理 targets
 	// 设置 Status 为 1
 	if err := db.Model(target).Updates(map[string]interface{}{"Status": status, "Title": Title}).Error; err != nil {

@@ -52,6 +52,7 @@ func Isipclr(ip string) bool {
 	ipc := config.GetCIDR(ip)
 	db := GetDB()
 	db.Where("ip_address LIKE ?", ipc+"%").Find(&existingIPs)
+	CloseDB(db)
 	if len(existingIPs) > 0 {
 		return true
 	} else {
@@ -65,22 +66,22 @@ func CheckDuplicateRecord(database *gorm.DB, tableName string, columnName string
 	switch tableName {
 	case "Company":
 		existingRecord = &Company{}
-	case "Domain":
-		existingRecord = &Domain{}
+	case "Domains":
+		existingRecord = &Domains{}
 	case "IPs":
 		existingRecord = &IPs{}
-	case "Fingerprint":
-		existingRecord = &Fingerprint{}
+	case "Fingerprints":
+		existingRecord = &Fingerprints{}
 	case "Targets":
 		existingRecord = &Targets{}
 	case "URLs":
 		existingRecord = &URLs{}
-	case "SearchKeywords":
-		existingRecord = &SearchKeywords{}
+	case "Keywords":
+		existingRecord = &Keywords{}
 	default:
 		return false, fmt.Errorf("invalid table name: %s", tableName)
 	}
-
+	//column := database.NamingStrategy.ColumnName("", columnName)
 	if err := database.Where(fmt.Sprintf("%s = ?", columnName), data).First(existingRecord).Error; err == nil {
 		// 如果已存在相同的数据，则返回 true
 		return true, nil
@@ -92,10 +93,10 @@ func CheckDuplicateRecord(database *gorm.DB, tableName string, columnName string
 	return false, nil
 }
 
-func GetNextTargetID(db *gorm.DB) (uint, error) {
+func GetNextTargetID(db *gorm.DB, table string) (uint, error) {
 	var maxID uint
 	// 查询数据库表中最大的 target ID
-	err := db.Table("targets").Select("COALESCE(MAX(id), 0)").Scan(&maxID).Error
+	err := db.Table(table).Select("COALESCE(MAX(id), 0)").Scan(&maxID).Error
 	if err != nil {
 		return 0, err
 	}

@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -90,9 +91,13 @@ type Runner struct {
 	pdcpUploadErrMsg string
 	inputProvider    provider.InputProvider
 	//general purpose temporary directory
-	tmpDir          string
-	parser          parser.Parser
-	httpApiEndpoint *httpapi.Server
+	tmpDir            string
+	parser            parser.Parser
+	httpApiEndpoint   *httpapi.Server
+	EmbedPocsFS       embed.FS
+	EnableSeverities  []string
+	TargetAndPocsName map[string][]string
+	EmbedPocs         embed.FS
 }
 
 const pprofServerAddress = "127.0.0.1:8086"
@@ -421,7 +426,7 @@ func (r *Runner) setupPDCPUpload(writer output.Writer) output.Writer {
 
 // RunEnumeration sets up the input layer for giving input nuclei.
 // binary and runs the actual enumeration
-func (r *Runner) RunEnumeration() error {
+func (r *Runner) RunEnumeration(TargetAndPocsName map[string][]string) error {
 	// If user asked for new templates to be executed, collect the list from the templates' directory.
 	if r.options.NewTemplates {
 		if arr := config.DefaultConfig.GetNewAdditions(); len(arr) > 0 {
@@ -456,6 +461,7 @@ func (r *Runner) RunEnumeration() error {
 		ResumeCfg:          r.resumeCfg,
 		ExcludeMatchers:    excludematchers.New(r.options.ExcludeMatchers),
 		InputHelper:        input.NewHelper(),
+		TargetAndPocsName:  TargetAndPocsName,
 		TemporaryDirectory: r.tmpDir,
 		Parser:             r.parser,
 	}
@@ -510,6 +516,23 @@ func (r *Runner) RunEnumeration() error {
 		return errors.Wrap(err, "Could not create loader.")
 	}
 
+	// list all templates or tags as specified by user.
+	// This uses a separate parser to reduce time taken as
+	// normally nuclei does a lot of compilation and stuff
+	// for templates, which we don't want for these simp
+	if r.options.TemplateList || r.options.TemplateDisplay || r.options.TagList {
+		if err := store.LoadTemplatesOnlyMetadata(); err != nil {
+			return err
+		}
+
+		if r.options.TagList {
+			r.listAvailableStoreTags(store)
+		} else {
+			r.listAvailableStoreTemplates(store)
+		}
+		os.Exit(0)
+	}
+
 	if r.options.Validate {
 		if err := store.ValidateTemplates(); err != nil {
 			return err
@@ -540,12 +563,6 @@ func (r *Runner) RunEnumeration() error {
 			_ = r.inputProvider.SetWithExclusions(host)
 		}
 	}
-	// list all templates
-	if r.options.TemplateList || r.options.TemplateDisplay {
-		r.listAvailableStoreTemplates(store)
-		os.Exit(0)
-	}
-
 	// display execution info like version , templates used etc
 	r.displayExecutionInfo(store)
 

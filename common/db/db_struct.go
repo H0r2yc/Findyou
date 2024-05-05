@@ -18,7 +18,7 @@ type Company struct {
 	Status uint
 }
 
-type Domain struct {
+type Domains struct {
 	ID     uint `gorm:"primaryKey"`
 	Domain string
 	IP     string
@@ -32,7 +32,7 @@ type IPs struct {
 	Status uint
 }
 
-type Fingerprint struct {
+type Fingerprints struct {
 	ID          uint `gorm:"primaryKey"`
 	Company     string
 	Fingerprint string
@@ -52,9 +52,9 @@ type URLs struct {
 	Status    uint
 }
 
-type SearchKeywords struct {
-	ID            uint `gorm:"primaryKey"`
-	SearchKeyword string
-	Count         uint
-	Status        uint
+type Keywords struct {
+	ID      uint `gorm:"primaryKey"`
+	Keyword string
+	Count   uint
+	Status  uint
 }

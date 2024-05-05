@@ -21,14 +21,25 @@ httpx:
   HTTPProxy: ""
   WebThreads: 200
   WebTimeout: 10
-nuclei:
-  Threads: 10
 fingerprint:
-  httpx: true
+  dirsearch: true
   screenshot: true
   fingerprinthub: true
   iconhash: true
   fingerprintx: true
+pocscan:
+  enable: true
+  xray:
+    pocPath: thirdparty/xray/xray/pocs
+  nuclei:
+    pocPath: thirdparty/nuclei/nuclei-templates
+  goby:
+    authUser: goby
+    authPass: goby
+    api:
+      - http://127.0.0.1:8361
+nuclei:
+  Threads: 10
 domainscan:
   resolver: resolver.txt
   wordlist: subnames.txt
@@ -45,16 +56,6 @@ onlineapi:
   fofa: true
   quake: false
   hunter: false
-pocscan:
-  xray:
-    pocPath: thirdparty/xray/xray/pocs
-  nuclei:
-    pocPath: thirdparty/nuclei/nuclei-templates
-  goby:
-    authUser: goby
-    authPass: goby
-    api:
-      - http://127.0.0.1:8361
 proxy:
   host: []
 

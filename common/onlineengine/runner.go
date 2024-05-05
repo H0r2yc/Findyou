@@ -41,11 +41,11 @@ func SearchEngineFromDB() {
 	appconfig := config.GetAppConf()
 	targetconfig := config.GetTargetConf()
 	//开始从数据库中读取信息并进行多次重复的信息收集
-	ips, err := db.GetAllIPs()
+	ips, err := db.GetAllIPs(0)
 	if err != nil {
 		gologger.Error().Msgf(err.Error())
 	}
-	domains, err := db.GetAllDomains()
+	domains, err := db.GetAllDomains(0)
 	if err != nil {
 		gologger.Error().Msgf(err.Error())
 	}
@@ -58,7 +58,7 @@ func SearchEngineFromDB() {
 	// 从Fofa中获取资产
 	if appconfig.OnlineAPI.IsFofa && !appconfig.OnlineAPI.IsHunter {
 		FOFADBSearch(ips, targetconfig.Target.Gobal_keywords, appconfig.API.Fofa.Key, "IP", appconfig.CDNConfig.SubdomainBruteForceThreads)
-		FOFADBSearch(domains, targetconfig.Target.Gobal_keywords, appconfig.API.Fofa.Key, "Domain", appconfig.CDNConfig.SubdomainBruteForceThreads)
+		FOFADBSearch(domains, targetconfig.Target.Gobal_keywords, appconfig.API.Fofa.Key, "Domains", appconfig.CDNConfig.SubdomainBruteForceThreads)
 		return
 	}
 	/* 从Hunter中获取资产后使用Fofa进行端口补充。

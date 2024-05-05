@@ -59,7 +59,7 @@ func DomainsToDB(result config.Targets) error {
 	DomainStatus := db.DBdata{DataUint: StatusList, Columnname: "Status", Uint: true}
 	//domain写入到Domain表
 	Domain := db.DBdata{
-		TableName:  "Domain",
+		TableName:  "Domains",
 		Columnname: "Domain",
 		ColumnLen:  2,
 		Sole:       true,
@@ -81,7 +81,7 @@ func DomainIPMapToDB(result config.Targets) error {
 	DomainStatus := db.DBdata{DataUint: StatusList, Columnname: "Status", Uint: true}
 	//domain写入到Domain表
 	Domain := db.DBdata{
-		TableName:  "Domain",
+		TableName:  "Domains",
 		Columnname: "Domain",
 		ColumnLen:  2,
 		Sole:       true,
@@ -99,14 +99,14 @@ func KeywordsToDB(keywords config.SearchKeyWords) error {
 	KeywordStatus := db.DBdata{DataUint: keywords.SearchStatus, Columnname: "Status", Uint: true}
 	KeywordCount := db.DBdata{DataUint: keywords.SearchCount, Columnname: "Count", Uint: true}
 	//所有target写入到targets表格
-	targetdbdata := db.DBdata{
-		TableName:  "SearchKeywords",
-		Columnname: "SearchKeyword",
+	Keyworddbdata := db.DBdata{
+		TableName:  "Keywords",
+		Columnname: "Keyword",
 		ColumnLen:  3,
 		Sole:       true,
 		Data:       keywords.KeyWords,
 	}
-	err := db.ItemTODB(targetdbdata, KeywordCount, KeywordStatus, nildbdatas)
+	err := db.ItemTODB(Keyworddbdata, KeywordCount, KeywordStatus, nildbdatas)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}
