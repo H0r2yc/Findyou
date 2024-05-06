@@ -16,13 +16,17 @@ portscan:
   tech: -sS
   cmdbin: nmap
 cdnconfig:
-  threads: 1000
+  threads: 500
 httpx:
   HTTPProxy: ""
   WebThreads: 200
   WebTimeout: 10
 fingerprint:
   dirsearch: true
+  customdir:
+    - "/login"
+    - "/test"
+    - "/admin"
   screenshot: true
   fingerprinthub: true
   iconhash: true

@@ -16,6 +16,7 @@ func DBMakeKeyword(datalist, globalkeywords []string, datatype string) []string 
 				if globalkeyword != "" {
 					searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"%s\"", data, globalkeyword))
 				} else {
+					//TODO 根据cert或者iconhash等等做匹配
 					searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"系统\"", data))
 				}
 			}

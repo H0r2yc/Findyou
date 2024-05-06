@@ -137,6 +137,10 @@ func Loadyaml() {
 	if len(config.Dirs) == 0 {
 		gologger.Fatal().Msg("请检查主动指纹探测数据库是否正常。")
 	}
+	appconfig := config.GetAppConf()
+	for _, dir := range appconfig.Fingerprint.CustomDir {
+		config.Dirs[dir] = []string{"common"}
+	}
 	gologger.Info().Msgf("目录扫描数据正常，共: %d 条\n", len(config.Dirs))
 	if len(config.Fingerprints) == 0 {
 		gologger.Fatal().Msg("请检查指纹数据库是否正常，是否正确放置config文件夹。")

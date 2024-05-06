@@ -23,7 +23,7 @@ func LoadConfig() (*config.Appconfig, *config.Targetconfig) {
 
 func startenginesearch(appconfig *config.Appconfig, targetconfig *config.Targetconfig) {
 	onlineengine.SearchEngine(appconfig, targetconfig)
-	onlineengine.SearchEngineFromDB()
+	//onlineengine.SearchEngineFromDB()
 }
 
 func Workflowrun() {
@@ -31,16 +31,19 @@ func Workflowrun() {
 	//TODO: 爱企查及企查查接口获取目标单位信息
 	//搜索引擎搜索
 	startenginesearch(appconfig, targetconfig)
-	//TODO 域名及CDN处理入库
+	//域名及CDN处理入库已经完成，全部放入domain库，后续直接读取iscdn为0的值对应的ip，并于ips目录ip进行对比然后加入到新的切片进行端口爆破及其他信息收集
 	//TODO 域名爆破，超过一百个就立即删除否则会爆内存
-	//TODO 重点IP做单独的端口扫描，1.真实的解析ip2.搜索结果较多的ip3.targets中最多端口的域名或ip
-	//Done Httpx做扫描
+	//TODO 重点IP做单独的端口扫描，1.真实的解析ip2.搜索结果较多的ip段3.targets中最多端口的域名或ipTOP?
+	//Done Httpx做存活扫描
 	httpxscan.Httpxscan(appconfig)
 	//TODO 域名绑定资产发现
 	//TODO 目录扫描，常见目录比如子域名同名目录，app，test,login等,进行指纹识别
 	fingerprint.Fingerprint(appconfig)
 	//TODO Poc识别
 	if appconfig.Pocscan.Enable {
+		gologger.Info().Msg("Poc扫描启用")
 		pocs.PocScan()
+	} else {
+		gologger.Info().Msg("Poc扫描未启用，跳过")
 	}
 }

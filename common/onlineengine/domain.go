@@ -1,7 +1,6 @@
 package onlineengine
 
-import "Findyou/common/config"
-
+/*
 func AddIPDomainMap(result config.Targets, ip, domain string) {
 	//多线程可能涉及需要手动设置Lock和Unlock，待观察
 	if result.DomainIPMap == nil {
@@ -28,3 +27,5 @@ func AddIPDomainMap(result config.Targets, ip, domain string) {
 		result.DomainIPMap[ip] = []string{domain}
 	}
 }
+
+*/

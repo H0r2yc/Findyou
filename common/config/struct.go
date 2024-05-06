@@ -28,13 +28,15 @@ var GlobalEmbedPocs embed.FS
 var GlobalResultMap map[string][]string
 
 type Targets struct {
-	Targets         []string
-	Domains         []string
-	IPs             []string
-	DomainIPMap     map[string][]string
-	DomainIPMapLock sync.Mutex
-	SearchCount     uint
-	SearchStatus    uint
+	Targets   []string
+	Domains   []string
+	DomainIps []string
+	IPs       []string
+	//DomainIPMap     map[string][]string
+	//DomainIPMapLock sync.Mutex
+	IsCDN        []uint
+	SearchCount  uint
+	SearchStatus uint
 }
 
 type SearchKeyWords struct {

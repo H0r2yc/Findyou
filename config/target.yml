@@ -1,10 +1,10 @@
 目标:
   名称:
-    - ""
+    - "中石油"
     -
     # 目标域名:xxx.com,xxx.com,xxx.com
   域名:
-    - "xiaohongshu.com"
+    - ""
     -
     # 目标ip:1.1.1.1,1.1.1.1/24
   ip:
@@ -12,6 +12,7 @@
     -
   cert:
   city:
+    - ""
   gobal_keyword:
     - ""
     -
@@ -37,5 +38,6 @@
     - ""
     -
 poc扫描:
-  启用: false
+  启用: true
   指定漏洞: ""
+  数据库poc扫描: false

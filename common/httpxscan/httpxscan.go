@@ -15,7 +15,7 @@ func Httpxscan(appconfig *config.Appconfig) {
 	if len(targets) == 0 {
 		return
 	}
-	gologger.Info().Msg("获取Web响应中")
+	gologger.Info().Msg("存活探测中")
 	var targetlist []string
 	for _, target := range targets {
 		targetlist = append(targetlist, target.Target)

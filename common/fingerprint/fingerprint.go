@@ -5,7 +5,6 @@ import (
 	"Findyou/common/config"
 	"Findyou/common/db"
 	"Findyou/common/httpxscan"
-	"Findyou/common/loadyaml"
 	"Findyou/common/output"
 	"Findyou/common/utils"
 	_ "embed"
@@ -25,19 +24,16 @@ func Fingerprint(appconfig *config.Appconfig) {
 	if len(targets) == 0 {
 		return
 	}
-	gologger.Info().Msg("获取Web响应中")
 	var aLiveURLs []string
 	for _, target := range targets {
 		aLiveURLs = append(aLiveURLs, target.Target)
 	}
 	// 前置任务目录爆破
 	if appconfig.Fingerprint.IsDirsearch {
-		//获取要扫描的所有目录
-		loadyaml.ReadDirYml()
 		//TODO 现在放到一个checkURLs中，后面放到redis并使用分布式获取任务扫描
 		var checkURLs []string
-		for path, _ := range config.Dirs {
-			for _, u := range aLiveURLs {
+		for _, u := range aLiveURLs {
+			for path, _ := range config.Dirs {
 				Url := ""
 				if u[len(u)-1:] == "/" && path[0:1] == "/" {
 					Url = u[:len(u)-1] + path
@@ -46,9 +42,22 @@ func Fingerprint(appconfig *config.Appconfig) {
 				}
 				checkURLs = append(checkURLs, Url)
 			}
+			subdomain, err2 := config.GetFirstSubdomain(u)
+			if err2 != nil {
+				//gologger.Error().Msg(err2.Error())
+				continue
+			}
+			Url := ""
+			if u[len(u)-1:] == "/" {
+				Url = u + subdomain
+			} else {
+				Url = u + "/" + subdomain
+			}
+			checkURLs = append(checkURLs, Url)
 		}
 		checkURLs = utils.RemoveDuplicateElement(checkURLs)
 		gologger.Info().Msg("开始主动指纹探测")
+		//TODO 放入redis分布式处理
 		httpxscan.DirBrute(checkURLs, appconfig, callback.DirBruteCallBack)
 	}
 	//指纹识别
@@ -79,16 +88,6 @@ func FingerprintIdentification() {
 
 			if len(results) > 0 {
 				config.GlobalResultMap[fullURL] = results
-				//msg := "[Finger] " + fullURL + " "
-				//msg += fmt.Sprintf("[%d] [", pathEntity.StatusCode)
-				//for _, r := range results {
-				//	msg += aurora.Cyan(r).String() + ","
-				//}
-				//msg = msg[:len(msg)-1] + "]"
-				//if pathEntity.Title != "" {
-				//	msg += fmt.Sprintf(" [%s]", pathEntity.Title)
-				//}
-				//gologger.Silent().Msg(msg)
 				output.FormatOutput(output.OutputMessage{
 					Type:     "Finger",
 					IP:       "",

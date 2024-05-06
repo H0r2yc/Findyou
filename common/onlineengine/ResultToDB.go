@@ -56,16 +56,18 @@ func DomainsToDB(result config.Targets) error {
 	for i := 0; i < len(result.Domains); i++ {
 		StatusList[i] = 0
 	}
+	DomainIPs := db.DBdata{Data: result.DomainIps, Columnname: "IP"}
+	DomainIsCDNs := db.DBdata{DataUint: result.IsCDN, Columnname: "ISCdn", Uint: true}
 	DomainStatus := db.DBdata{DataUint: StatusList, Columnname: "Status", Uint: true}
 	//domain写入到Domain表
 	Domain := db.DBdata{
 		TableName:  "Domains",
 		Columnname: "Domain",
-		ColumnLen:  2,
+		ColumnLen:  4,
 		Sole:       true,
 		Data:       result.Domains,
 	}
-	err := db.ItemTODB(Domain, DomainStatus, nildbdatas, nildbdatas)
+	err := db.ItemTODB(Domain, DomainIPs, DomainIsCDNs, DomainStatus)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}

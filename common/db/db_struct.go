@@ -34,7 +34,7 @@ type IPs struct {
 
 type Fingerprints struct {
 	ID          uint `gorm:"primaryKey"`
-	Company     string
+	Url         string
 	Fingerprint string
 }
 

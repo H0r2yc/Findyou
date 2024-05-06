@@ -25,15 +25,6 @@ func DirBrute(urls []string, appconfig *config.Appconfig, callBack func(resp run
 		Threads:                   appconfig.Httpxconfig.WebThreads,
 		// 是否为目录爆破，如果是目录爆破默认不存响应
 		//IsBrute:                   true,
-		OnResult: func(r runner.Result) {
-			// handle error
-			if r.Err != nil {
-				gologger.Error().Msgf("%s: %s\n", r.Input, r.Err)
-				return
-			}
-			//TODO 放入redis分布式处理
-			//gologger.Silent().Msgf("[Finger] [%d] %s [%s]\n", r.StatusCode, r.URL, r.Title)
-		},
 	}
 
 	if err := options.ValidateOptions(); err != nil {
@@ -44,7 +35,7 @@ func DirBrute(urls []string, appconfig *config.Appconfig, callBack func(resp run
 	if err != nil {
 		gologger.Error().Msgf("runner.New(&options) error")
 	}
-
+	httpxRunner.CallBack = callBack
 	httpxRunner.RunEnumeration()
 	httpxRunner.Close()
 }

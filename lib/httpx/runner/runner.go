@@ -86,6 +86,7 @@ type Runner struct {
 	browser             *Browser
 	errorPageClassifier *errorpageclassifier.ErrorPageClassifier
 	pHashClusters       []pHashCluster
+	CallBack            func(resp Result)
 }
 
 // picked based on try-fail but it seems to close to one it's used https://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html#c1992

@@ -108,6 +108,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) config.Tar
 	q.Add("key", key)
 	q.Add("page", "1")
 	q.Add("size", fmt.Sprintf("%d", pageSize))
+	//TODO 返回类型包含归属地和hash方便后面生成keyword
 	q.Add("fields", "host,protocol,title,icp,ip,port,domain")
 	q.Add("full", "false")
 	req.URL.RawQuery = q.Encode()
@@ -152,12 +153,19 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) config.Tar
 	targets.SearchCount = uint(len(responseJson.Results))
 	gologger.Info().Msgf("[Fofa] [%s] 已查询: %d/%d", keyword, len(responseJson.Results), responseJson.Size)
 	// 做一个域名缓存，避免重复dns请求
+	var Domains []string
+	DomainIPMap := make(map[string]string)
 	domainCDNMap := make(map[string]bool)
+	var protocol, ip, port, host, domain, icp, title string
 	for _, result := range responseJson.Results {
-		host := result[0]
-		protocol := result[1]
-		port := result[5]
-		domain := ""
+		host = result[0]
+		protocol = result[1]
+		ip = result[4]
+		icp = result[2]
+		title = result[3]
+		port = result[5]
+		//这儿赋值为""的目的是domain是根域名，不包含子域名，所有要后面处理后成为子域名
+		domain = ""
 		if result[6] != "" {
 			//这里添加的域名host直接到target只是一个端口，实际可能存在其他端口
 			if strings.Contains(host, "://") {
@@ -167,6 +175,9 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) config.Tar
 			}
 			realHost := strings.ReplaceAll(host, protocol+"://", "")
 			domain = strings.ReplaceAll(realHost, ":"+port, "")
+			//添加domainIP的映射关系，并添加到待检测cdn的Domains中
+			DomainIPMap[domain] = ip
+			Domains = append(Domains, domain)
 		} else {
 			if strings.Contains(host, "://") {
 				targets.Targets = append(targets.Targets, host)
@@ -179,115 +190,89 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) config.Tar
 				}
 			}
 		}
-		if domain != "" {
-			targets.Domains = append(targets.Domains, domain)
-		}
 	}
 
-	targets.Domains = utils.RemoveDuplicateElement(targets.Domains)
+	Domains = utils.RemoveDuplicateElement(Domains)
 	isCDN := false
 	//如果语法是ip扫描，就不探测cdn了，而且ip也不会进入到ips库中继续等待扫描，因为使用的语法是/24，重复扫描
-	if !strings.Contains(keyword, "ip=") && len(targets.Domains) != 0 {
-		var icp, title, protocol, ip, port, host, domain string
-		gologger.Info().Msgf("正在查询 [%v] 个域名是否为CDN资产", len(targets.Domains))
-		cdnDomains, normalDomains, _ := cdn.CheckCDNs(targets.Domains, cdnthread)
+	//TODO 如果是domain那么前面就不添加对应的ip，避免是cdn节点，如果不是节点那么添加ip到ips表
+	if !strings.Contains(keyword, "ip=") && len(Domains) != 0 {
+		gologger.Info().Msgf("正在查询 [%v] 个域名是否为CDN资产", len(Domains))
+		cdnDomains, normalDomains, _ := cdn.CheckCDNs(Domains, cdnthread)
+		gologger.Info().Msgf("CDN资产为 [%v] 个", len(cdnDomains))
 		for _, d := range cdnDomains {
 			_, ok := domainCDNMap[d]
 			if !ok {
-				domainCDNMap[d] = true
+				targets.Domains = append(targets.Domains, d)
+				targets.IsCDN = append(targets.IsCDN, 1)
+				targets.DomainIps = append(targets.DomainIps, "")
 			}
 		}
 		for _, d := range normalDomains {
 			_, ok := domainCDNMap[d]
 			if !ok {
-				domainCDNMap[d] = false
+				targets.Domains = append(targets.Domains, d)
+				targets.IsCDN = append(targets.IsCDN, 0)
+				targets.DomainIps = append(targets.DomainIps, DomainIPMap[d])
 			}
 		}
-		for _, result := range responseJson.Results {
-			host = result[0]
-			protocol = result[1]
-			icp = result[2]
-			title = result[3]
-			ip = result[4]
-			port = result[5]
-			domain = ""
-			if result[6] != "" {
-				realHost := strings.ReplaceAll(host, protocol+"://", "")
-				domain = strings.ReplaceAll(realHost, ":"+port, "")
-			}
-			if domain != "" {
-				domainInfo, ok := domainCDNMap[domain]
-				if ok {
-					isCDN = domainInfo
-				}
-				if !isCDN {
-					//targets.DomainIPMap[domain] = ip
-					AddIPDomainMap(targets, ip, domain)
-				}
-
-			}
-			//Todo 比如通过cert或者其他方式能不能正常获取到ip并添加到数据库
-			if !isCDN {
-				//什么情况下把ip放入数据库，/24情况下如果C段的进去数据库会一直反复，还得改
-			}
-		}
-
-		show := "[Fofa]"
-		addTarget := ""
-		if config.GlobalConfig.OnlyIPPort && !isCDN {
-			if protocol == "http" || protocol == "https" {
-				addTarget = protocol + "://" + ip + ":" + port
-				show += " " + addTarget
-			} else {
-				addTarget = protocol + "://" + ip + ":" + port
-				show += " " + addTarget
-			}
-		} else {
-			if protocol == "http" {
-				addTarget = protocol + "://" + host
-				show += " " + addTarget
-			} else if protocol == "https" {
-				addTarget = host
-				show += " " + host
-			} else {
-				addTarget = host
-				show += " " + protocol + "://" + host
-			}
-		}
-
-		if title != "" {
-			show += " [" + title + "]"
-		}
-		if icp != "" {
-			icp += " [" + icp + "]"
-		}
-		if isCDN {
-			show += " [CDN]"
-		}
-
-		if utils.GetItemInArray(targets.Targets, addTarget) == -1 {
-			if !isCDN || config.GlobalConfig.AllowCDNAssets {
-				targets.Targets = append(targets.Targets, addTarget)
-			}
-			// gologger.Silent().Msg(show)
-			output.FormatOutput(output.OutputMessage{
-				Type:          "Fofa",
-				IP:            ip,
-				IPs:           nil,
-				Port:          port,
-				Protocol:      protocol,
-				Web:           output.WebInfo{},
-				Finger:        nil,
-				Domain:        domain,
-				GoPoc:         output.GoPocsResultType{},
-				URI:           host,
-				City:          "",
-				Show:          show,
-				AdditionalMsg: "",
-			})
-		}
-
 	}
+
+	show := "[Fofa]"
+	addTarget := ""
+	if config.GlobalConfig.OnlyIPPort && !isCDN {
+		if protocol == "http" || protocol == "https" {
+			addTarget = protocol + "://" + ip + ":" + port
+			show += " " + addTarget
+		} else {
+			addTarget = protocol + "://" + ip + ":" + port
+			show += " " + addTarget
+		}
+	} else {
+		if protocol == "http" {
+			addTarget = protocol + "://" + host
+			show += " " + addTarget
+		} else if protocol == "https" {
+			addTarget = host
+			show += " " + host
+		} else {
+			addTarget = host
+			show += " " + protocol + "://" + host
+		}
+	}
+
+	if title != "" {
+		show += " [" + title + "]"
+	}
+	if icp != "" {
+		icp += " [" + icp + "]"
+	}
+	if isCDN {
+		show += " [CDN]"
+	}
+
+	if utils.GetItemInArray(targets.Targets, addTarget) == -1 {
+		if !isCDN || config.GlobalConfig.AllowCDNAssets {
+			targets.Targets = append(targets.Targets, addTarget)
+		}
+		// gologger.Silent().Msg(show)
+		output.FormatOutput(output.OutputMessage{
+			Type:          "Fofa",
+			IP:            ip,
+			IPs:           nil,
+			Port:          port,
+			Protocol:      protocol,
+			Web:           output.WebInfo{},
+			Finger:        nil,
+			Domain:        domain,
+			GoPoc:         output.GoPocsResultType{},
+			URI:           host,
+			City:          "",
+			Show:          show,
+			AdditionalMsg: "",
+		})
+	}
+
 	targets.Targets = utils.RemoveDuplicateElement(targets.Targets)
 	targets.IPs = utils.RemoveDuplicateElement(targets.IPs)
 	return targets

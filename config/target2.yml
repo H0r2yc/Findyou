@@ -1,6 +1,6 @@
 目标:
   名称:
-    - "行吟科技"
+    - ""
     -
     # 目标域名:xxx.com,xxx.com,xxx.com
   域名:
@@ -12,7 +12,9 @@
     -
   cert:
   city:
+    - "上海"
   gobal_keyword:
+    - "运营"
     - "行吟"
     - "小红书"
     -
@@ -40,3 +42,4 @@
 poc扫描:
   启用: false
   指定漏洞: ""
+  数据库poc扫描: false
