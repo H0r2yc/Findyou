@@ -47,6 +47,7 @@ func Fingerprint(appconfig *config.Appconfig) {
 				//gologger.Error().Msg(err2.Error())
 				continue
 			}
+			//添加子域名作为目录
 			Url := ""
 			if u[len(u)-1:] == "/" {
 				Url = u + subdomain

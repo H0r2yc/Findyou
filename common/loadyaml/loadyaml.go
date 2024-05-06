@@ -137,6 +137,7 @@ func Loadyaml() {
 	if len(config.Dirs) == 0 {
 		gologger.Fatal().Msg("请检查主动指纹探测数据库是否正常。")
 	}
+	//添加自定义的目录作为域名爆破
 	appconfig := config.GetAppConf()
 	for _, dir := range appconfig.Fingerprint.CustomDir {
 		config.Dirs[dir] = []string{"common"}
