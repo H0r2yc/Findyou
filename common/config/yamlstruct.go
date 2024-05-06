@@ -1,16 +1,12 @@
 package config
 
 type Targetconfig struct {
-	Ips             []string
 	Target          Target          `yaml:"目标"`
-	Customizesyntax customizesyntax `yaml:"自定义语法扫描"`
+	Customizesyntax customizesyntax `yaml:"自定义扫描"`
 	Pocset          PocSet          `yaml:"poc扫描"`
 }
 
 type Appconfig struct {
-	//Rpc         RPC         `yaml:"rpc"`
-	//FileSync    RPC         `yaml:"fileSync"`
-	//Rabbitmq    Rabbitmq    `yaml:"rabbitmq"`
 	API          API         `yaml:"api"`
 	Portscan     Portscan    `yaml:"portscan"`
 	Fingerprint  Fingerprint `yaml:"fingerprint"`
@@ -72,9 +68,10 @@ type AQCQCC struct {
 }
 
 type customizesyntax struct {
-	Fofa   []string `yaml:"fofa"`
-	Hunter []string `yaml:"hunter"`
-	Quake  []string `yaml:"quake"`
+	Fofa        []string `yaml:"fofa"`
+	Hunter      []string `yaml:"hunter"`
+	Quake       []string `yaml:"quake"`
+	SearchLevel int      `yaml:"递归搜索等级"`
 }
 
 type OnlineAPI struct {

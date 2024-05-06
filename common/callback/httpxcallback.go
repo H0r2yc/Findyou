@@ -5,14 +5,13 @@ import (
 	"Findyou/common/output"
 	"Findyou/common/utils"
 	"fmt"
-	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/httpx/runner"
 	"strconv"
 	"strings"
 )
 
 func DirBruteCallBack(resp runner.Result) {
-	gologger.Info().Msg("12312312312313")
+	fmt.Println(12312313)
 	var Paths []string
 	for dbPath, _ := range config.Dirs {
 		if strings.HasSuffix(resp.Path, dbPath) {

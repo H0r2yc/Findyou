@@ -71,25 +71,9 @@ func DomainsToDB(result config.Targets) error {
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}
-	return nil
-}
-
-func DomainIPMapToDB(result config.Targets) error {
-	//创建一个和ips相同数量的Status值并赋值0
-	StatusList := make([]uint, len(result.Domains))
-	for i := 0; i < len(result.Targets); i++ {
-		StatusList[i] = 0
-	}
-	DomainStatus := db.DBdata{DataUint: StatusList, Columnname: "Status", Uint: true}
-	//domain写入到Domain表
-	Domain := db.DBdata{
-		TableName:  "Domains",
-		Columnname: "Domain",
-		ColumnLen:  2,
-		Sole:       true,
-		Data:       result.Domains,
-	}
-	err := db.ItemTODB(Domain, DomainStatus, nildbdatas, nildbdatas)
+	//不是cdn的ip写入到ips表中并初始化
+	result.IPs = result.DomainIps
+	err = IpsToDB(result)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}

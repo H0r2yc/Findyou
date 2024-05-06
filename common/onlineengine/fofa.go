@@ -57,10 +57,8 @@ func FOFASearch(targetlist *config.Targetconfig, fofakey string, cdnthread int) 
 }
 
 func FOFADBSearch(datalist, globalkeywords []string, fofakey, datatype string, cdnthread int) {
-	gologger.Info().Msg("联想收集...")
 	searchkeywords := config.SearchKeyWords{}
 	searchkeywords.KeyWords = DBMakeKeyword(datalist, globalkeywords, datatype)
-	gologger.Info().Msgf("准备从fofa获取数据")
 	for _, keyword := range searchkeywords.KeyWords {
 		result := SearchFOFACore(keyword, fofakey, 9000, cdnthread)
 		err := targetsToDB(result)

@@ -44,12 +44,39 @@ func SearchEngineFromDB() {
 	ips, err := db.GetAllIPs(0)
 	if err != nil {
 		gologger.Error().Msgf(err.Error())
+		return
 	}
+	//var idStrings []string
+	var IPList []string
+	for _, ip := range ips {
+		//idStrings = append(idStrings, strconv.FormatUint(uint64(ip.ID), 10))
+		IPList = append(IPList, ip.IP)
+	}
+
 	domains, err := db.GetAllDomains(0)
 	if err != nil {
 		gologger.Error().Msgf(err.Error())
+		return
 	}
-
+	//var idStrings []string
+	var DomainList []string
+	for _, domain := range domains {
+		//idStrings = append(idStrings, strconv.FormatUint(uint64(ip.ID), 10))
+		DomainList = append(DomainList, domain.Domain)
+	}
+	//取出来后将视为已经使用，将所有已经用过的ip和domains都修改状态
+	for _, ip := range ips {
+		err = db.ProcessIPs(ip, 1)
+		if err != nil {
+			gologger.Error().Msgf("Failed to process ips: %s", err.Error())
+		}
+	}
+	for _, domain := range domains {
+		err = db.ProcessDomains(domain, 1)
+		if err != nil {
+			gologger.Error().Msgf("Failed to process domains: %s", err.Error())
+		}
+	}
 	// 从Hunter中获取资产
 	//if appconfig.OnlineAPI.IsHunter && !appconfig.OnlineAPI.IsFofa {
 	//	config.GlobalConfig.Targets, _ = uncover.HunterSearch(config.GlobalConfig.Targets)
@@ -57,8 +84,8 @@ func SearchEngineFromDB() {
 	//}
 	// 从Fofa中获取资产
 	if appconfig.OnlineAPI.IsFofa && !appconfig.OnlineAPI.IsHunter {
-		FOFADBSearch(ips, targetconfig.Target.Gobal_keywords, appconfig.API.Fofa.Key, "IP", appconfig.CDNConfig.SubdomainBruteForceThreads)
-		FOFADBSearch(domains, targetconfig.Target.Gobal_keywords, appconfig.API.Fofa.Key, "Domains", appconfig.CDNConfig.SubdomainBruteForceThreads)
+		FOFADBSearch(DomainList, targetconfig.Target.Gobal_keywords, appconfig.API.Fofa.Key, "Domains", appconfig.CDNConfig.SubdomainBruteForceThreads)
+		FOFADBSearch(IPList, targetconfig.Target.Gobal_keywords, appconfig.API.Fofa.Key, "IP", appconfig.CDNConfig.SubdomainBruteForceThreads)
 		return
 	}
 	/* 从Hunter中获取资产后使用Fofa进行端口补充。
@@ -79,4 +106,5 @@ func SearchEngineFromDB() {
 		config.GlobalConfig.Targets = uncover.QuakeSearch(config.GlobalConfig.Targets)
 	}
 	*/
+
 }

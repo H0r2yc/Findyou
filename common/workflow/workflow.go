@@ -23,7 +23,12 @@ func LoadConfig() (*config.Appconfig, *config.Targetconfig) {
 
 func startenginesearch(appconfig *config.Appconfig, targetconfig *config.Targetconfig) {
 	onlineengine.SearchEngine(appconfig, targetconfig)
-	//onlineengine.SearchEngineFromDB()
+	//联想收集
+	for i := 0; i < targetconfig.Customizesyntax.SearchLevel; i++ {
+		gologger.Info().Msgf("联想收集第 [%d] 次", i+1)
+		gologger.Info().Msgf("准备从fofa获取数据")
+		onlineengine.SearchEngineFromDB()
+	}
 }
 
 func Workflowrun() {

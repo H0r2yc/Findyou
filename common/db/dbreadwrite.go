@@ -155,7 +155,7 @@ func removeFromDBdata(dbdata *DBdata, index int) {
 }
 
 // GetAllIPs 返回所有 IPs 表中的 ID 和 IP
-func GetAllIPs(status uint) ([]string, error) {
+func GetAllIPs(status uint) ([]IPs, error) {
 	var ips []IPs
 	database := GetDB()
 	if database == nil {
@@ -166,20 +166,12 @@ func GetAllIPs(status uint) ([]string, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
-	//var idStrings []string
-	var ipStrings []string
-	for _, ip := range ips {
-		//idStrings = append(idStrings, strconv.FormatUint(uint64(ip.ID), 10))
-		ipStrings = append(ipStrings, ip.IP)
-	}
 	CloseDB(database)
-	//return idStrings, ipStrings, nil
-	return ipStrings, nil
+	return ips, nil
 }
 
 // GetAllDomains 返回所有 IPs 表中的 ID 和 IP
-func GetAllDomains(status uint) ([]string, error) {
+func GetAllDomains(status uint) ([]Domains, error) {
 	var domains []Domains
 	database := GetDB()
 	if database == nil {
@@ -190,15 +182,8 @@ func GetAllDomains(status uint) ([]string, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	//var idStrings []string
-	var domainStrings []string
-	for _, domain := range domains {
-		//idStrings = append(idStrings, strconv.FormatUint(uint64(ip.ID), 10))
-		domainStrings = append(domainStrings, domain.Domain)
-	}
 	CloseDB(database)
-	//return idStrings, ipStrings, nil
-	return domainStrings, nil
+	return domains, nil
 }
 
 // GetAllTargets 从数据库中取出所有 Status 为 0 的数据
@@ -218,6 +203,26 @@ func ProcessTargets(target *Targets, Title string, status uint) error {
 	// 处理 targets
 	// 设置 Status 为 1
 	if err := db.Model(target).Updates(map[string]interface{}{"Status": status, "Title": Title}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// ProcessIPs 处理从数据库中取出的数据，并将 Status 设置为 1
+func ProcessIPs(IPs IPs, status uint) error {
+	db := GetDB()
+	// 设置 Status 为 1
+	if err := db.Model(IPs).Update("Status", status).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// ProcessDomains 处理从数据库中取出的数据，并将 Status 设置为 1
+func ProcessDomains(Domains Domains, status uint) error {
+	db := GetDB()
+	// 设置 Status 为 1
+	if err := db.Model(Domains).Update("Status", status).Error; err != nil {
 		return err
 	}
 	return nil
