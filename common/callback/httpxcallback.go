@@ -11,7 +11,6 @@ import (
 )
 
 func DirBruteCallBack(resp runner.Result) {
-	fmt.Println(12312313)
 	var Paths []string
 	for dbPath, _ := range config.Dirs {
 		if strings.HasSuffix(resp.Path, dbPath) {

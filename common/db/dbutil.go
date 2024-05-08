@@ -1,7 +1,7 @@
 package db
 
 import (
-	"Findyou/common/config"
+	"Findyou/common/utils"
 	"fmt"
 	"gorm.io/gorm"
 	"reflect"
@@ -49,7 +49,7 @@ func setFieldValue(record interface{}, records *[]interface{}, columnname string
 
 func Isipclr(ip string) bool {
 	var existingIPs []IPs
-	ipc := config.GetCIDR(ip)
+	ipc := utils.GetCIDR(ip)
 	db := GetDB()
 	db.Where("ip_address LIKE ?", ipc+"%").Find(&existingIPs)
 	CloseDB(db)

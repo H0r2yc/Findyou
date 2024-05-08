@@ -33,6 +33,10 @@ func ItemTODB(dbdatas, dbdatas2, dbdatas3, dbdatas4 DBdata) error {
 		//如果没有删除记录，那么就+1
 		i++
 	}
+
+	if len(dbdatas.Data) == 0 {
+		return nil
+	}
 	// 根据目标表格名称和字段名称创建对应的记录
 	var record interface{}
 	switch dbdatas.TableName {
@@ -158,6 +162,7 @@ func removeFromDBdata(dbdata *DBdata, index int) {
 func GetAllIPs(status uint) ([]IPs, error) {
 	var ips []IPs
 	database := GetDB()
+	defer CloseDB(database)
 	if database == nil {
 		gologger.Error().Msg("Failed to get database connection")
 	}
@@ -166,7 +171,22 @@ func GetAllIPs(status uint) ([]IPs, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	CloseDB(database)
+	return ips, nil
+}
+
+// GetIPs 返回IP对应的结构体
+func GetIPs(ip string) (IPs, error) {
+	var ips IPs
+	database := GetDB()
+	defer CloseDB(database)
+	if database == nil {
+		gologger.Error().Msg("Failed to get database connection")
+	}
+	// 查询整个表
+	result := database.Where("IP = ?", ip).First(&ips)
+	if result.Error != nil {
+		return ips, result.Error
+	}
 	return ips, nil
 }
 
@@ -186,9 +206,26 @@ func GetAllDomains(status uint) ([]Domains, error) {
 	return domains, nil
 }
 
+// GetDomain 返回IP对应的结构体
+func GetDomain(domain string) (Domains, error) {
+	var domains Domains
+	database := GetDB()
+	defer CloseDB(database)
+	if database == nil {
+		gologger.Error().Msg("Failed to get database connection")
+	}
+	// 查询整个表
+	result := database.Where("Domain = ?", domain).First(&domains)
+	if result.Error != nil {
+		return domains, result.Error
+	}
+	return domains, nil
+}
+
 // GetAllTargets 从数据库中取出所有 Status 为 0 的数据
 func GetAllTargets(status uint) ([]Targets, error) {
 	db := GetDB()
+	defer CloseDB(db)
 	var targets []Targets
 	result := db.Where("Status = ?", status).Find(&targets)
 	if result.Error != nil {
@@ -200,6 +237,7 @@ func GetAllTargets(status uint) ([]Targets, error) {
 // ProcessTargets 处理从数据库中取出的数据，并将 Status 设置为 1
 func ProcessTargets(target *Targets, Title string, status uint) error {
 	db := GetDB()
+	defer CloseDB(db)
 	// 处理 targets
 	// 设置 Status 为 1
 	if err := db.Model(target).Updates(map[string]interface{}{"Status": status, "Title": Title}).Error; err != nil {
@@ -211,6 +249,7 @@ func ProcessTargets(target *Targets, Title string, status uint) error {
 // ProcessIPs 处理从数据库中取出的数据，并将 Status 设置为 1
 func ProcessIPs(IPs IPs, status uint) error {
 	db := GetDB()
+	defer CloseDB(db)
 	// 设置 Status 为 1
 	if err := db.Model(IPs).Update("Status", status).Error; err != nil {
 		return err
@@ -221,6 +260,7 @@ func ProcessIPs(IPs IPs, status uint) error {
 // ProcessDomains 处理从数据库中取出的数据，并将 Status 设置为 1
 func ProcessDomains(Domains Domains, status uint) error {
 	db := GetDB()
+	defer CloseDB(db)
 	// 设置 Status 为 1
 	if err := db.Model(Domains).Update("Status", status).Error; err != nil {
 		return err

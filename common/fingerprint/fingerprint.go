@@ -1,7 +1,6 @@
 package fingerprint
 
 import (
-	"Findyou/common/callback"
 	"Findyou/common/config"
 	"Findyou/common/db"
 	"Findyou/common/httpxscan"
@@ -42,7 +41,7 @@ func Fingerprint(appconfig *config.Appconfig) {
 				}
 				checkURLs = append(checkURLs, Url)
 			}
-			subdomain, err2 := config.GetFirstSubdomain(u)
+			subdomain, err2 := utils.GetFirstSubdomain(u)
 			if err2 != nil {
 				//gologger.Error().Msg(err2.Error())
 				continue
@@ -59,7 +58,7 @@ func Fingerprint(appconfig *config.Appconfig) {
 		checkURLs = utils.RemoveDuplicateElement(checkURLs)
 		gologger.Info().Msg("开始主动指纹探测")
 		//TODO 放入redis分布式处理
-		httpxscan.DirBrute(checkURLs, appconfig, callback.DirBruteCallBack)
+		httpxscan.DirBrute(checkURLs, appconfig)
 	}
 	//指纹识别
 	FingerprintIdentification()

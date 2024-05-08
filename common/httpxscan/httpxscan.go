@@ -59,7 +59,11 @@ func Httpxscan(appconfig *config.Appconfig) {
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
-			err = db.ProcessTargets(target, r.Title, 1)
+			if r.StatusCode >= 200 && r.StatusCode < 500 {
+				err = db.ProcessTargets(target, r.Title, 1)
+			} else {
+				err = db.ProcessTargets(target, r.Title, 3)
+			}
 			if err != nil {
 				gologger.Error().Msgf("Failed to process target: %s", err.Error())
 			}

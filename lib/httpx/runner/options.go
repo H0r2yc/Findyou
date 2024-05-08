@@ -297,7 +297,6 @@ type Options struct {
 	ScreenshotTimeout  int
 	// HeadlessOptionalArguments specifies optional arguments to pass to Chrome
 	HeadlessOptionalArguments goflags.StringSlice
-	IsBrute                   bool // 是否为目录爆破，如果是目录爆破默认不存响应
 }
 
 // ParseOptions parses the command line options for application

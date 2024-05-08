@@ -4,7 +4,6 @@ import (
 	"Findyou/common/cdn"
 	"Findyou/common/config"
 	"Findyou/common/db"
-	"Findyou/common/output"
 	"Findyou/common/utils"
 	"encoding/base64"
 	"encoding/json"
@@ -29,13 +28,12 @@ type FOFAResponseJson struct {
 var nildbdatas = db.DBdata{}
 
 func FOFASearch(targetlist *config.Targetconfig, fofakey string, cdnthread int) {
-	searchkeywords := config.SearchKeyWords{}
-	searchkeywords.KeyWords = FofaMakeKeyword(targetlist)
+	KeyWords := FofaMakeKeyword(targetlist)
 	gologger.Info().Msgf("准备从fofa获取数据")
-	for _, keyword := range searchkeywords.KeyWords {
+	for _, keyword := range KeyWords {
 		result := SearchFOFACore(keyword, fofakey, 9000, cdnthread)
-		searchkeywords.SearchCount = append(searchkeywords.SearchCount, result.SearchCount)
-		searchkeywords.SearchStatus = append(searchkeywords.SearchStatus, result.SearchStatus)
+		//searchkeywords.SearchCount = append(searchkeywords.SearchCount, result.SearchCount)
+		//searchkeywords.SearchStatus = append(searchkeywords.SearchStatus, result.SearchStatus)
 		err := targetsToDB(result)
 		if err != nil {
 			gologger.Error().Msg(err.Error())
@@ -48,37 +46,80 @@ func FOFASearch(targetlist *config.Targetconfig, fofakey string, cdnthread int) 
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
+		//keyword入库的部分
+		err = KeywordToDB(keyword, result)
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
 	}
 	//keyword入库的部分
-	err := KeywordsToDB(searchkeywords)
-	if err != nil {
-		gologger.Error().Msg(err.Error())
-	}
+	//err := KeywordsToDB(searchkeywords)
+	//if err != nil {
+	//	gologger.Error().Msg(err.Error())
+	//}
 }
 
 func FOFADBSearch(datalist, globalkeywords []string, fofakey, datatype string, cdnthread int) {
-	searchkeywords := config.SearchKeyWords{}
-	searchkeywords.KeyWords = DBMakeKeyword(datalist, globalkeywords, datatype)
-	for _, keyword := range searchkeywords.KeyWords {
-		result := SearchFOFACore(keyword, fofakey, 9000, cdnthread)
-		err := targetsToDB(result)
-		if err != nil {
-			gologger.Error().Msg(err.Error())
+	for _, data := range datalist {
+		var success bool = true
+		Keywords := DBMakeKeyword(globalkeywords, data, datatype)
+		for _, keyword := range Keywords {
+			result := SearchFOFACore(keyword, fofakey, 9000, cdnthread)
+			//searchkeywords.SearchCount = append(searchkeywords.SearchCount, result.SearchCount)
+			//searchkeywords.SearchStatus = append(searchkeywords.SearchStatus, result.SearchStatus)
+			if result.SearchStatus != 1 {
+				success = false
+				break
+			}
+			err := targetsToDB(result)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			err = IpsToDB(result)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			err = DomainsToDB(result)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			//keyword入库的部分
+			err = KeywordToDB(keyword, result)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
 		}
-		err = IpsToDB(result)
-		if err != nil {
-			gologger.Error().Msg(err.Error())
+		//实时修改数据库使用过的数据状态
+		if !success {
+			gologger.Error().Msg("出错了，不进行操作并退出当前模块进行下一步")
+			break
 		}
-		err = DomainsToDB(result)
-		if err != nil {
-			gologger.Error().Msg(err.Error())
+		if datatype == "IP" {
+			IPdbdata, err := db.GetIPs(data)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			err = db.ProcessIPs(IPdbdata, 1)
+			if err != nil {
+				gologger.Error().Msgf("Failed to process ips: %s", err.Error())
+			}
+		} else if datatype == "Domains" {
+			Domaindbdata, err := db.GetDomain(data)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			err = db.ProcessDomains(Domaindbdata, 1)
+			if err != nil {
+				gologger.Error().Msgf("Failed to process domains: %s", err.Error())
+			}
 		}
 	}
 	//keyword入库的部分
-	err := KeywordsToDB(searchkeywords)
-	if err != nil {
-		gologger.Error().Msg(err.Error())
-	}
+	//err := KeywordsToDB(searchkeywords)
+	//if err != nil {
+	//	gologger.Error().Msg(err.Error())
+	//}
+
 }
 
 // 从Fofa中搜索目标
@@ -112,7 +153,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) config.Tar
 	req.URL.RawQuery = q.Encode()
 
 	// 确保不会超速
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 1)
 
 	resp, errDo := client.Do(req)
 	if errDo != nil {
@@ -152,16 +193,22 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) config.Tar
 	gologger.Info().Msgf("[Fofa] [%s] 已查询: %d/%d", keyword, len(responseJson.Results), responseJson.Size)
 	// 做一个域名缓存，避免重复dns请求
 	var Domains []string
+	var ips []string
 	DomainIPMap := make(map[string]string)
 	domainCDNMap := make(map[string]bool)
-	var protocol, ip, port, host, domain, icp, title string
+	var protocol, ip, port, host, domain string
 	for _, result := range responseJson.Results {
 		host = result[0]
 		protocol = result[1]
 		ip = result[4]
-		icp = result[2]
-		title = result[3]
 		port = result[5]
+		//去除一些受保护的空白数据以及ipv6
+		if !utils.IsIPv4(ip) {
+			continue
+		}
+		if port == "0" {
+			continue
+		}
 		//这儿赋值为""的目的是domain是根域名，不包含子域名，所有要后面处理后成为子域名
 		domain = ""
 		if result[6] != "" {
@@ -184,14 +231,13 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) config.Tar
 			}
 			if !strings.Contains(keyword, "ip=") {
 				if !db.Isipclr(result[4]) {
-					targets.IPs = append(targets.IPs, result[4])
+					ips = append(targets.IPs, result[4])
 				}
 			}
 		}
 	}
 
 	Domains = utils.RemoveDuplicateElement(Domains)
-	isCDN := false
 	//如果语法是ip扫描，就不探测cdn了，而且ip也不会进入到ips库中继续等待扫描，因为使用的语法是/24，重复扫描
 	//TODO 如果是domain那么前面就不添加对应的ip，避免是cdn节点，如果不是节点那么添加ip到ips表
 	if !strings.Contains(keyword, "ip=") && len(Domains) != 0 {
@@ -215,63 +261,15 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) config.Tar
 			}
 		}
 	}
-
-	show := "[Fofa]"
-	addTarget := ""
-	if config.GlobalConfig.OnlyIPPort && !isCDN {
-		if protocol == "http" || protocol == "https" {
-			addTarget = protocol + "://" + ip + ":" + port
-			show += " " + addTarget
-		} else {
-			addTarget = protocol + "://" + ip + ":" + port
-			show += " " + addTarget
-		}
-	} else {
-		if protocol == "http" {
-			addTarget = protocol + "://" + host
-			show += " " + addTarget
-		} else if protocol == "https" {
-			addTarget = host
-			show += " " + host
-		} else {
-			addTarget = host
-			show += " " + protocol + "://" + host
-		}
-	}
-
-	if title != "" {
-		show += " [" + title + "]"
-	}
-	if icp != "" {
-		icp += " [" + icp + "]"
-	}
-	if isCDN {
-		show += " [CDN]"
-	}
-
-	if utils.GetItemInArray(targets.Targets, addTarget) == -1 {
-		if !isCDN || config.GlobalConfig.AllowCDNAssets {
-			targets.Targets = append(targets.Targets, addTarget)
-		}
-		// gologger.Silent().Msg(show)
-		output.FormatOutput(output.OutputMessage{
-			Type:          "Fofa",
-			IP:            ip,
-			IPs:           nil,
-			Port:          port,
-			Protocol:      protocol,
-			Web:           output.WebInfo{},
-			Finger:        nil,
-			Domain:        domain,
-			GoPoc:         output.GoPocsResultType{},
-			URI:           host,
-			City:          "",
-			Show:          show,
-			AdditionalMsg: "",
-		})
-	}
-
+	//domain已经判断过是否重复
 	targets.Targets = utils.RemoveDuplicateElement(targets.Targets)
-	targets.IPs = utils.RemoveDuplicateElement(targets.IPs)
+	if ips != nil {
+		ips = utils.RemoveDuplicateElement(ips)
+		for _, str := range ips {
+			if str != "" && utils.IsIPv4(str) && !utils.StringInSlice(utils.GetCIDR(str), targets.IPs) {
+				targets.IPs = append(targets.IPs, str)
+			}
+		}
+	}
 	return targets
 }

@@ -5,27 +5,22 @@ import (
 	"fmt"
 )
 
-func DBMakeKeyword(datalist, globalkeywords []string, datatype string) []string {
-	//读取数据库ip表并添加到searchlist
+func DBMakeKeyword(globalkeywords []string, data, datatype string) []string {
 	//判断如果ip属于定义的归属地，那么就直接/24，如果不是那么就下面
 	var searchlist []string
 	if datatype == "IP" {
 		for _, globalkeyword := range globalkeywords {
-			for _, data := range datalist {
-				//Todo 如果是归属地相同或者重点ip表中，那么就直接/24
-				if globalkeyword != "" {
-					searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"%s\"", data, globalkeyword))
-				} else {
-					//TODO 根据cert或者iconhash等等做匹配
-					searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"系统\"", data))
-				}
+			//Todo 如果是归属地相同或者重点ip表中，那么就直接/24
+			if globalkeyword != "" {
+				searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data, globalkeyword))
+			} else {
+				//TODO 根据cert或者iconhash等等做匹配
+				searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
 			}
 		}
 		return searchlist
-	} else if datatype == "Domain" {
-		for _, data := range datalist {
-			searchlist = append(searchlist, fmt.Sprintf("domain=\"%s\"", data))
-		}
+	} else if datatype == "Domains" {
+		searchlist = append(searchlist, fmt.Sprintf("domain=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
 		return searchlist
 	}
 	return nil
@@ -36,6 +31,7 @@ func FofaMakeKeyword(targetlist *config.Targetconfig) []string {
 	for _, name := range targetlist.Target.Name {
 		if name != "" {
 			//searchlist = append(searchlist, fmt.Sprintf("icp.name=\"%s\"", name))
+			searchlist = append(searchlist, fmt.Sprintf("cert=\"%s\"", name))
 			searchlist = append(searchlist, fmt.Sprintf("title=\"%s\" && title=\"系统\"", name))
 		}
 	}

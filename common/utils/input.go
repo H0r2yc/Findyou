@@ -9,6 +9,16 @@ import (
 	"strings"
 )
 
+// 查找一个str是否存在于切片中
+func StringInSlice(target string, slice []string) bool {
+	for _, item := range slice {
+		if strings.Contains(item, target) {
+			return true
+		}
+	}
+	return false
+}
+
 // IsIPv4 IsIP checks if a string is either IP version 4 Alias for `net.ParseIP`
 func IsIPv4(str string) bool {
 	for i := 0; i < len(str); i++ {

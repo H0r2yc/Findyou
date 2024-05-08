@@ -3,7 +3,7 @@ package config
 type Targetconfig struct {
 	Target          Target          `yaml:"目标"`
 	Customizesyntax customizesyntax `yaml:"自定义扫描"`
-	Pocset          PocSet          `yaml:"poc扫描"`
+	OtherSet        OtherSet        `yaml:"其他扫描选项"`
 }
 
 type Appconfig struct {
@@ -20,9 +20,11 @@ type Appconfig struct {
 	Nucleiconfig Nuclei      `yaml:"nuclei"`
 }
 
-type PocSet struct {
-	Enable           bool   `yaml:"启用"`
+type OtherSet struct {
+	Enable           bool   `yaml:"Poc启用"`
+	DBScan           bool   `yaml:"跳过配置从数据库扫描"`
 	PocNameForSearch string `yaml:"指定漏洞"`
+	DomainCollect    bool   `yaml:"域名联想收集"`
 }
 
 type Nuclei struct {
@@ -45,7 +47,7 @@ type API struct {
 }
 
 type CDNConfig struct {
-	SubdomainBruteForceThreads int `yaml:"threads"`
+	CDNBruteForceThreads int `yaml:"threads"`
 }
 
 type APIKey struct {

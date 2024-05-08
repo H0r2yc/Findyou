@@ -22,7 +22,11 @@ func LoadConfig() (*config.Appconfig, *config.Targetconfig) {
 }
 
 func startenginesearch(appconfig *config.Appconfig, targetconfig *config.Targetconfig) {
-	onlineengine.SearchEngine(appconfig, targetconfig)
+	if !targetconfig.OtherSet.DBScan {
+		onlineengine.SearchEngine(appconfig, targetconfig)
+	} else {
+		gologger.Info().Msg("直接从数据库中的数据开始扫描")
+	}
 	//联想收集
 	for i := 0; i < targetconfig.Customizesyntax.SearchLevel; i++ {
 		gologger.Info().Msgf("联想收集第 [%d] 次", i+1)
