@@ -1,0 +1,73 @@
+package main
+
+import (
+	"Findyou.TaskScheduling/common/db/mysqldb"
+	"Findyou.TaskScheduling/common/db/redisdb"
+	"Findyou.TaskScheduling/common/dbmaketask"
+	"Findyou.TaskScheduling/common/makekeywords"
+	"Findyou.TaskScheduling/common/taskstruct"
+	"Findyou.TaskScheduling/common/utils"
+	"github.com/projectdiscovery/gologger"
+	"time"
+)
+
+func main() {
+	//检查数据库状态，读取app.yaml和target.yaml
+	appconfig, targetconfig := prepare()
+	//从target.yaml生成对应平台的keywords并写入到mysql和redis
+	if !targetconfig.OtherSet.DBScan {
+		makekeywords.YAMLMakeKeywordsToDB(appconfig, targetconfig)
+	} else {
+		gologger.Info().Msg("跳过从配置文件生成任务")
+	}
+	//表中设置workflow状态，for循环探测到所有的status都是done且无任务且数据库无可生成的任务就结束
+	for {
+		//Done 改成获取tasks表中的状态，这样就不用多个表的判断了
+		Status, count := mysqldb.CheckAllTasksStatus("Completed")
+		if !Status {
+			gologger.Info().Msgf("当前 [%d] 任务未完成", count)
+			//检查tasks表的失败和取消的任务并重新生成task
+			err := dbmaketask.Taskmaketask("Failed")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			err = dbmaketask.Taskmaketask("Cancelled")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			//检查ips表并生成任务
+			err = dbmaketask.IPsmaketask(appconfig, targetconfig)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			//检查domains表并生成任务
+			err = dbmaketask.Domainsmaketask(appconfig, targetconfig)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			//检查targets表并生成任务
+			err = dbmaketask.TargetsMakeAliveScanTasks(appconfig)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			time.Sleep(30 * time.Second)
+			continue
+		}
+		if mysqldb.CheckAllWorkflowStatus("Completed") && redisdb.RedisIsNull() {
+			break
+		}
+		gologger.Info().Msg("Workflow状态未结束或任务列表有未完成的任务")
+		time.Sleep(30 * time.Second)
+	}
+	gologger.Info().Msg("所有任务结束,调度模块停止")
+}
+
+func prepare() (*taskstruct.Appconfig, *taskstruct.Targetconfig) {
+	appconfig, targetconfig := utils.LoadConfig()
+	mysqldb.CheckAndCreate(appconfig)
+	taskstruct.CompanyID = make(map[string]uint)
+	//从数据库中读取company信息并赋值给CompanyID
+	mysqldb.DBCompaniesToStruct()
+	mysqldb.YamlCompanyToDB(targetconfig)
+	return appconfig, targetconfig
+}
