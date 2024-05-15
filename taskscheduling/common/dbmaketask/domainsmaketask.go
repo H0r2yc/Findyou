@@ -8,13 +8,16 @@ import (
 	"Findyou.TaskScheduling/common/utils"
 	"fmt"
 	"github.com/projectdiscovery/gologger"
+	"strconv"
 )
 
 func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targetconfig) error {
 	rediscon := redisdb.GetRedisClient()
 	var fofakeywords []string
+	var subdomainbrute []string
 	//var hunterkeywords []string
 	//var quakekeywords []string
+	var splitslice [][]string
 	waitdomains, err := mysqldb.GetAllDomains("Waiting", true)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
@@ -23,38 +26,65 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 	if len(waitdomains) == 0 {
 		return nil
 	}
-	gologger.Info().Msgf("待生成task的domains数量 [%d]", len(waitdomains))
-	for _, task := range waitdomains {
-		keyword := makekeywords.Makekeywordfromdb(appconfig, targetconfig, task.IP, "Domains", task.CompanyID)
+	//生成搜索语句keywords和subdomainbrute列表
+	for _, domainstruct := range waitdomains {
+		keyword := makekeywords.Makekeywordfromdb(appconfig, targetconfig, domainstruct.RootDomain, "Domains", domainstruct.CompanyID)
 		fofakeywords = append(fofakeywords, keyword.FofaKeyWords...)
 		//hunterkeywords = append(hunterkeywords, keyword.HunterKeyWords...)
 		//quakekeywords = append(quakekeywords, keyword.QuakeKeyWords...)
+		subdomainbrute = append(subdomainbrute, domainstruct.RootDomain+"Findyou"+strconv.Itoa(int(domainstruct.CompanyID)))
 	}
+	subdomainbrute = utils.RemoveDuplicateElement(subdomainbrute)
+	fofakeywords = utils.RemoveDuplicateElement(fofakeywords)
 	if len(fofakeywords) != 0 {
 		//写入keywords到tasks，状态waitting
-		tasks, err := mysqldb.WriteSearchwordToTasks(fofakeywords, "FOFASEARCH")
+		keywordtasks, err := mysqldb.WriteSearchwordOrDomainToTasks(fofakeywords, "FOFASEARCH")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
-		//写入处理过的纯keywords到keywords表
-		keywords := utils.TaskDataToKeywordData(fofakeywords)
-		err = mysqldb.WriteDataToKeywords(keywords)
+		//写入subdomainbrute到tasks，状态waitting
+		domaintask, err := mysqldb.WriteSearchwordOrDomainToTasks(subdomainbrute, "SUBDOMAINBRUTE")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
-
-		splitslice := utils.SplitSlice(fofakeywords, appconfig.Splittodb.Fofakeyword)
-		for i := 0; i < len(splitslice); i++ {
-			err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
-			if err != nil {
-				fmt.Println("Error writing data to Redis:", err)
-				return err
-			}
-		}
-		for _, keyword := range tasks {
-			err = mysqldb.UpdateTasksStatus(keyword, "Pending")
+		//处理keywords
+		if len(keywordtasks) != 0 {
+			//写入处理过的纯keywords到keywords表
+			keywords := utils.TaskDataToKeywordData(fofakeywords)
+			err = mysqldb.WriteDataToKeywords(keywords)
 			if err != nil {
 				gologger.Error().Msg(err.Error())
+			}
+
+			splitslice = utils.SplitSlice(fofakeywords, appconfig.Splittodb.Fofakeyword)
+			for i := 0; i < len(splitslice); i++ {
+				err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
+				if err != nil {
+					fmt.Println("Error writing data to Redis:", err)
+					return err
+				}
+			}
+			for _, keyword := range keywordtasks {
+				err = mysqldb.UpdateTasksStatus(keyword, "Pending")
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
+			}
+		}
+		//处理domain爆破
+		if len(subdomainbrute) != 0 {
+			for _, domain := range subdomainbrute {
+				err = redisdb.WriteDataToRedis(rediscon, "SUBDOMAINBRUTE", []string{domain})
+				if err != nil {
+					fmt.Println("Error writing data to Redis:", err)
+					return err
+				}
+			}
+			for _, domain := range domaintask {
+				err = mysqldb.UpdateTasksStatus(domain, "Pending")
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
 			}
 		}
 	}
@@ -66,5 +96,6 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 			gologger.Error().Msg(err.Error())
 		}
 	}
+	gologger.Info().Msgf("[%d] 个domain已生成 [%d] 个任务", len(waitdomains), len(splitslice)+len(subdomainbrute))
 	return nil
 }

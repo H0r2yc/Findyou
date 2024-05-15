@@ -40,7 +40,7 @@ func main() {
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
-			//检查domains表并生成任务
+			//检查domains表并生成任务,搜索语句和子域名爆破
 			err = dbmaketask.Domainsmaketask(appconfig, targetconfig)
 			if err != nil {
 				gologger.Error().Msg(err.Error())

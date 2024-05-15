@@ -5,6 +5,7 @@ import (
 	"Findyou.WorkFlow/common/httpxscan"
 	"Findyou.WorkFlow/common/loadyaml"
 	"Findyou.WorkFlow/common/onlineengine"
+	"Findyou.WorkFlow/common/subdomainbrute"
 	"Findyou.WorkFlow/common/utils"
 	"github.com/projectdiscovery/gologger"
 	"time"
@@ -19,10 +20,11 @@ func Workflowrun() {
 	appconfig := utils.GetAppConf()
 	rediscon := redisdb.GetRedisClient()
 	if rediscon == nil {
-		gologger.Fatal().Msgf("获取redis连接失败")
+		gologger.Fatal().Msg("获取redis连接失败")
 		return
 	}
 	for {
+		gologger.Info().Msgf("当前workflow模块状态: \nFOFA搜索引擎:%v, HUNTER搜索引擎:%v, QUAKE搜索引擎:%v, CDN检查模块:%v, 子域名爆破模块:%v, 存活探测模块:%v, 目录扫描模块:%v, 指纹识别模块:%v, POC扫描模块:%v", appconfig.Module.Fofasearch, appconfig.Module.Huntersearch, appconfig.Module.Quakesearch, appconfig.Module.Cdncheck, appconfig.Module.Domainbrute, appconfig.Module.Alivescan, appconfig.Module.Dirbrute, appconfig.Module.Fingerprint, appconfig.Module.Pocscan)
 		//TODO: 爱企查及企查查接口获取目标单位信息
 		if redisdb.RedisIsNull() {
 			gologger.Info().Msg("Redis 数据库为空，等待任务")
@@ -40,7 +42,8 @@ func Workflowrun() {
 			onlineengine.FOFASearch(value, appconfig)
 		case "HUNTERSEARCH":
 			gologger.Info().Msg("待实现")
-		case "DOMAINBRUTE":
+		case "SUBDOMAINBRUTE":
+			subdomainbrute.SubdomainBrute(value)
 			gologger.Info().Msg("待实现")
 		case "ALIVESCAN":
 			httpxscan.Httpxscan(value, appconfig)

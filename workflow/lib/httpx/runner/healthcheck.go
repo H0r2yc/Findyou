@@ -11,7 +11,7 @@ import (
 )
 
 func DoHealthCheck(options *Options, flagSet *goflags.FlagSet) string {
-	// RW permissions on workflowstruct file
+	// RW permissions on config file
 	cfgFilePath, _ := flagSet.GetConfigFilePath()
 	var test strings.Builder
 	test.WriteString(fmt.Sprintf("Version: %s\n", version))

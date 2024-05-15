@@ -1,20 +1,9 @@
-module:
-  fofasearch: true
-  huntersearch: false
-  quakesearch: false
-  cdncheck: true
-  domainbrute: false
-  alivescan: true
-  dirbrute: true
-  fingerprint: true
-  pocscan: true
-
 api:
   searchPageSize: 100
   searchLimitCount: 1000
   fofa:
-    key: yiheng6221@163.com:093208d32a4b0202b925240b81e9b739
-  #key: ying.hu@qingteng.cn:00954c8731415dfe6cd7f97820c4ce10
+    #key: yiheng6221@163.com:093208d32a4b0202b925240b81e9b739
+  key: ying.hu@qingteng.cn:00954c8731415dfe6cd7f97820c4ce10
   icp:
     key: ""
   quake:

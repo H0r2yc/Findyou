@@ -12,6 +12,19 @@ type Appconfig struct {
 	CDNConfig    CDNConfig `yaml:"cdnconfig"`
 	Httpxconfig  Httpx     `yaml:"httpx"`
 	Nucleiconfig Nuclei    `yaml:"nuclei"`
+	Module       Module    `yaml:"module"`
+}
+
+type Module struct {
+	Fofasearch   bool `yaml:"fofasearch"`
+	Huntersearch bool `yaml:"huntersearch"`
+	Quakesearch  bool `yaml:"quakesearch"`
+	Cdncheck     bool `yaml:"cdncheck"`
+	Domainbrute  bool `yaml:"domainbrute"`
+	Alivescan    bool `yaml:"alivescan"`
+	Dirbrute     bool `yaml:"dirbrute"`
+	Fingerprint  bool `yaml:"fingerprint"`
+	Pocscan      bool `yaml:"pocscan"`
 }
 
 type OnlineAPI struct {

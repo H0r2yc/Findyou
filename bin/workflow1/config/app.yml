@@ -8,7 +8,7 @@ module:
   dirbrute: true
   fingerprint: true
   pocscan: true
-
+  
 api:
   searchPageSize: 100
   searchLimitCount: 1000

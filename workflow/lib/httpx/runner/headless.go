@@ -27,7 +27,7 @@ type Browser struct {
 	// TODO: Remove the Chrome PID kill code in favor of using Leakless(true).
 	// This change will be made if there are no complaints about zombie Chrome processes.
 	// Reference: https://github.com/projectdiscovery/httpx/pull/1426
-	// pids    map[int32]taskstruct{}
+	// pids    map[int32]struct{}
 }
 
 func NewBrowser(proxy string, useLocal bool, optionalArgs map[string]string) (*Browser, error) {

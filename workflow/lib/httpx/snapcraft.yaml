@@ -25,7 +25,7 @@ apps:
 #  dot-httpx:
 #    interface: personal-files
 #    write:
-#      - $HOME/.workflowstruct/httpx
+#      - $HOME/.config/httpx
 
 parts:
   httpx:

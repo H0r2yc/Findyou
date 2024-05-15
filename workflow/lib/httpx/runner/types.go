@@ -90,7 +90,7 @@ type Result struct {
 	Header             string
 }
 
-// function to get dsl variables from result taskstruct
+// function to get dsl variables from result struct
 func dslVariables() ([]string, error) {
 	fakeResult := Result{}
 	fieldsToIgnore := []string{"Hashes", "ResponseHeaders", "Err", "KnowledgeBase"}

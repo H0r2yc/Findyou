@@ -4,6 +4,7 @@ import (
 	"Findyou.WorkFlow/common/utils"
 	"fmt"
 	"github.com/projectdiscovery/gologger"
+	"golang.org/x/net/publicsuffix"
 	"gorm.io/gorm"
 )
 
@@ -76,13 +77,18 @@ func DomainsToDB(domains, domainsip []string, companyid uint) error {
 		if isexists {
 			continue
 		}
+		rootdomain, err := publicsuffix.EffectiveTLDPlusOne(domain)
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
 		iscdn := domainsip[index] == ""
 		domainsdb := Domains{
-			Domain:    domain,
-			IP:        domainsip[index],
-			ISCdn:     iscdn,
-			CompanyID: companyid,
-			Status:    "Waiting",
+			Domain:     domain,
+			IP:         domainsip[index],
+			ISCdn:      iscdn,
+			CompanyID:  companyid,
+			RootDomain: rootdomain,
+			Status:     "Waiting",
 		}
 		err = WriteToDomains(database, domainsdb)
 		if err != nil {

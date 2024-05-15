@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	// Parse the command line flags and read workflowstruct files
+	// Parse the command line flags and read config files
 	options := runner.ParseOptions()
 
 	// Profiling related code

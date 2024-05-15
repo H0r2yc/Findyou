@@ -119,7 +119,7 @@ func CheckAllTasksStatus(status string) (bool, int) {
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}
-	return result.RowsAffected == 0 && len(getwaittargets) == 0 && len(getwaitdomain) == 0 && len(getwaitips) == 0, int(result.RowsAffected) + len(getwaittargets) + len(getwaitdomain) + len(getwaitips)
+	return result.RowsAffected == 0 && len(getwaittargets) == 0 && len(getwaitdomain) == 0 && len(getwaitips) == 0, int(result.RowsAffected)
 }
 
 // 从target.yaml中写入公司到DB

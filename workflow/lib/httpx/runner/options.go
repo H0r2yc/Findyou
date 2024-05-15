@@ -420,7 +420,7 @@ func ParseOptions() *Options {
 	)
 
 	flagSet.CreateGroup("configs", "Configurations",
-		flagSet.StringVar(&cfgFile, "workflowstruct", "", "path to the httpx configuration file (default $HOME/.workflowstruct/httpx/workflowstruct.yaml)"),
+		flagSet.StringVar(&cfgFile, "config", "", "path to the httpx configuration file (default $HOME/.config/httpx/config.yaml)"),
 		flagSet.DynamicVar(&options.PdcpAuth, "auth", "true", "configure projectdiscovery cloud (pdcp) api key"),
 		flagSet.StringSliceVarP(&options.Resolvers, "resolvers", "r", nil, "list of custom resolver (file or comma separated)", goflags.NormalizedStringSliceOptions),
 		flagSet.Var(&options.Allow, "allow", "allowed list of IP/CIDR's to process (file or comma separated)"),
@@ -486,11 +486,11 @@ func ParseOptions() *Options {
 
 	if cfgFile != "" {
 		if !fileutil.FileExists(cfgFile) {
-			gologger.Fatal().Msgf("given workflowstruct file '%s' does not exist", cfgFile)
+			gologger.Fatal().Msgf("given config file '%s' does not exist", cfgFile)
 		}
-		// merge workflowstruct file with flags
+		// merge config file with flags
 		if err := flagSet.MergeConfigFile(cfgFile); err != nil {
-			gologger.Fatal().Msgf("Could not read workflowstruct: %s\n", err)
+			gologger.Fatal().Msgf("Could not read config: %s\n", err)
 		}
 	}
 

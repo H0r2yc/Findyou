@@ -2,12 +2,9 @@ package utils
 
 import (
 	"Findyou.TaskScheduling/common/taskstruct"
-	"fmt"
 	"github.com/projectdiscovery/gologger"
 	"gopkg.in/yaml.v3"
-	"log"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -22,7 +19,7 @@ func LoadConfig() (*taskstruct.Appconfig, *taskstruct.Targetconfig) {
 	app := GetAppConf()
 	target := GetTargetConf()
 	if app != nil && target != nil {
-		gologger.Info().Msgf("目标:%s, 域名:%s, IP:%s, 证书:%s, 重点地区:%s\nfofa自定义语法为:%s\nhunter自定义语法为:%s\nquake自定义语法为:%s\n全局关键字:%s\n", targetconfig.Target.Name, targetconfig.Target.Domain, targetconfig.Target.IP, targetconfig.Target.Cert, targetconfig.Target.City, targetconfig.Customizesyntax.Fofa, targetconfig.Customizesyntax.Hunter, targetconfig.Customizesyntax.Quake, strings.Join(targetconfig.Target.Gobal_keywords, ", "))
+		gologger.Info().Msgf("目标:%s, 域名:%s, IP:%s, 证书:%s, 重点地区:%s\nfofa自定义语法为:%s\nhunter自定义语法为:%s\nquake自定义语法为:%s\n全局关键字:%s\n", targetconfig.Target.Name, targetconfig.Target.Domain, targetconfig.Target.IP, targetconfig.Target.Cert, targetconfig.Target.City, targetconfig.Customizesyntax.Fofa, targetconfig.Customizesyntax.Hunter, targetconfig.Customizesyntax.Quake, targetconfig.Target.Gobal_keywords)
 		time.After(5 * time.Second)
 	}
 	return app, target
@@ -34,11 +31,11 @@ func GetAppConf() *taskstruct.Appconfig {
 		WorkerConfigReloadMutex.Lock()
 		err := ReadConfig(configyml, "appconfig")
 		if err != nil {
-			log.Println(err)
+			gologger.Error().Msg(err.Error())
 		}
 		WorkerConfigReloadMutex.Unlock()
 		if err != nil {
-			fmt.Println("Load config fail!")
+			gologger.Error().Msg("Load config fail!")
 			os.Exit(0)
 		}
 		return appconfig
@@ -52,11 +49,11 @@ func GetTargetConf() *taskstruct.Targetconfig {
 		WorkerConfigReloadMutex.Lock()
 		err := ReadConfig(targetyml, "targetconfig")
 		if err != nil {
-			log.Println(err)
+			gologger.Error().Msg(err.Error())
 		}
 		WorkerConfigReloadMutex.Unlock()
 		if err != nil {
-			fmt.Println("Load config fail!")
+			gologger.Error().Msg("Load config fail!")
 			os.Exit(0)
 		}
 		return targetconfig
@@ -68,7 +65,7 @@ func GetTargetConf() *taskstruct.Targetconfig {
 func ReadConfig(configyml, configtype string) error {
 	fileContent, err := os.ReadFile(configyml)
 	if err != nil {
-		fmt.Println(err)
+		gologger.Error().Msg(err.Error())
 		return err
 	}
 	if configtype == "appconfig" {
@@ -77,7 +74,7 @@ func ReadConfig(configyml, configtype string) error {
 		err = yaml.Unmarshal(fileContent, targetconfig)
 	}
 	if err != nil {
-		fmt.Println(err)
+		gologger.Error().Msg(err.Error())
 	}
 	return err
 }

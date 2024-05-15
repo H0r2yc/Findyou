@@ -12,6 +12,7 @@ import (
 func TargetsMakeAliveScanTasks(appconfig *taskstruct.Appconfig) error {
 	rediscon := redisdb.GetRedisClient()
 	var alivescanlist []string
+	var splitslice [][]string
 	waittargets, err := mysqldb.GetTargets("Waiting", true)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
@@ -20,14 +21,13 @@ func TargetsMakeAliveScanTasks(appconfig *taskstruct.Appconfig) error {
 	if len(waittargets) == 0 {
 		return nil
 	}
-	gologger.Info().Msgf("待生成task的targets数量 [%d]", len(waittargets))
 	for _, target := range waittargets {
 		alivescanlist = append(alivescanlist, target.Target)
 	}
 	if len(alivescanlist) != 0 {
-		splitslice := utils.SplitSlice(alivescanlist, appconfig.Splittodb.Workflow)
+		splitslice = utils.SplitSlice(alivescanlist, appconfig.Splittodb.Workflow)
 		//写入alivelist到tasks，状态waitting
-		tasks, err := mysqldb.WriteTargetsToTasks(splitslice, appconfig.Splittodb.Workflow, "ALIVESCAN")
+		tasks, err := mysqldb.WriteTargetsToTasks(splitslice, len(splitslice), "ALIVESCAN")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
@@ -48,10 +48,11 @@ func TargetsMakeAliveScanTasks(appconfig *taskstruct.Appconfig) error {
 	}
 	//修改数据库中targets状态
 	for _, target := range waittargets {
-		err = mysqldb.UpdateTargetsStatus(target, "Completed")
+		err = mysqldb.UpdateTargetsStatus(target, "WaitScan")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
 	}
+	gologger.Info().Msgf("[%d] 个target已生成 [%d] 个任务", len(waittargets), len(splitslice))
 	return nil
 }

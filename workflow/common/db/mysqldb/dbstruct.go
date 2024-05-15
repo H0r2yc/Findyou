@@ -28,12 +28,13 @@ type Company struct {
 }
 
 type Domains struct {
-	ID        uint `gorm:"primaryKey"`
-	Domain    string
-	IP        string
-	ISCdn     bool
-	CompanyID uint
-	Status    string
+	ID         uint `gorm:"primaryKey"`
+	Domain     string
+	IP         string
+	ISCdn      bool
+	CompanyID  uint
+	RootDomain string
+	Status     string
 }
 
 type IPs struct {

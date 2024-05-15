@@ -34,3 +34,15 @@ func TaskDataToKeywordData(TaskData []string) []string {
 	}
 	return keywords
 }
+
+func RemoveDuplicateElement(input []string) []string {
+	temp := map[string]struct{}{}
+	var result []string
+	for _, item := range input {
+		if _, ok := temp[item]; !ok {
+			temp[item] = struct{}{}
+			result = append(result, item)
+		}
+	}
+	return result
+}

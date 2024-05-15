@@ -32,7 +32,7 @@ func WriteToTasks(db *gorm.DB, tasks Tasks) error {
 	return nil
 }
 
-func WriteSearchwordToTasks(searchlist []string, TaskName string) ([]Tasks, error) {
+func WriteSearchwordOrDomainToTasks(searchlist []string, TaskName string) ([]Tasks, error) {
 	var tasks []Tasks
 	database := GetDB()
 	defer CloseDB(database)
@@ -132,6 +132,5 @@ func WriteDataToKeywords(keywords []string) error {
 			return err
 		}
 	}
-
 	return nil
 }

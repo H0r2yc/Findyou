@@ -16,7 +16,7 @@ func Taskmaketask(status string) error {
 	if len(waittask) == 0 {
 		return nil
 	}
-	gologger.Info().Msgf("重新提交状态为%s的任务 [%s} 个", status, len(waittask))
+	gologger.Info().Msgf("重新提交状态为%s的任务 [%s] 个", status, len(waittask))
 	for _, task := range waittask {
 		redistaskdata := task.Task + "Findyou" + strconv.Itoa(int(task.CompanyID))
 		err = redisdb.WriteDataToRedis(rediscon, task.TaskName, []string{redistaskdata})
