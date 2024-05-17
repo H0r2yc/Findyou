@@ -45,7 +45,12 @@ func main() {
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
-			//检查targets表并生成任务
+			//检查targets表并生成存活探测任务
+			err = dbmaketask.TargetsMakeAliveScanTasks(appconfig)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			//检查targets表并生成目录列表和指纹识别任务
 			err = dbmaketask.TargetsMakeAliveScanTasks(appconfig)
 			if err != nil {
 				gologger.Error().Msg(err.Error())

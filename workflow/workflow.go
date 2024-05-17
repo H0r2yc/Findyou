@@ -49,6 +49,8 @@ func Workflowrun() {
 			httpxscan.Httpxscan(value, appconfig)
 		case "DIRBRUTE":
 			gologger.Info().Msg("待实现")
+		case "FINGERPRINT":
+			gologger.Info().Msg("待实现")
 		}
 		//域名及CDN处理入库已经完成，全部放入domain库，后续直接读取iscdn为0的值对应的ip，并于ips目录ip进行对比然后加入到新的切片进行端口爆破及其他信息收集
 		//TODO 子域名爆破，超过一百个就立即删除否则会爆内存

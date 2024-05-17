@@ -10,12 +10,6 @@ api:
     key: ""
   hunter:
     key: ""
-portscan:
-  ping: false
-  port: --top-ports 1000
-  rate: 1000
-  tech: -sS
-  cmdbin: nmap
 cdnconfig:
   threads: 500
 httpx:

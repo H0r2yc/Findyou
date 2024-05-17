@@ -1,15 +1,5 @@
 package mysqldb
 
-type DBdata struct {
-	TableName  string
-	ColumnLen  int
-	Columnname string
-	Uint       bool
-	Sole       bool
-	Data       []string
-	DataUint   []uint
-}
-
 /*
 Waiting(等待下一步):表示等待下一步操作的数据，比如加载到redis中
 Pending（等待处理）：表示待处理的数据，还未开始处理。
@@ -19,6 +9,17 @@ Failed（失败）：表示处理失败的数据，处理过程中出现了错�
 Cancelled（已取消）：表示已经取消处理的数据，可能是由于某种原因中止了处理过程。
 Paused（已暂停）
 */
+
+//使用Redis的键值对
+//FOFASEARCH
+//FOFADBSEARCH
+//HUNTERSEARCH
+//HUNTERDBSEARCH
+//QUAKESEARCH
+//QUAKEDBSEARCH
+//DOMAINBRUTE
+//ALIVESCAN
+//AQCQCCSCAN
 
 type KeywordsList struct {
 	FofaKeyWords   []string
