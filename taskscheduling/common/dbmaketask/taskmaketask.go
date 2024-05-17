@@ -16,17 +16,39 @@ func Taskmaketask(status string) error {
 	if len(waittask) == 0 {
 		return nil
 	}
-	gologger.Info().Msgf("重新提交状态为%s的任务 [%s] 个", status, len(waittask))
+	gologger.Info().Msgf("重新提交状态为%s的任务 [%d] 个", status, len(waittask))
 	for _, task := range waittask {
-		redistaskdata := task.Task + "Findyou" + strconv.Itoa(int(task.CompanyID))
-		err = redisdb.WriteDataToRedis(rediscon, task.TaskName, []string{redistaskdata})
-		if err != nil {
-			gologger.Error().Msg(err.Error())
+		switch task.TaskName {
+		case "FOFASEARCH":
+			redistaskdata := task.Task + "Findyou" + strconv.Itoa(int(task.CompanyID))
+			err = redisdb.WriteDataToRedis(rediscon, task.TaskName, []string{redistaskdata})
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			err = mysqldb.UpdateTasksStatus(task, "Pending")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+		case "ALIVESCAN":
+			err = redisdb.WriteDataToRedis(rediscon, task.TaskName, []string{task.Task})
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			err = mysqldb.UpdateTasksStatus(task, "Pending")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+		case "SUBDOMAINBRUTE":
+			err = redisdb.WriteDataToRedis(rediscon, task.TaskName, []string{task.Task})
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			err = mysqldb.UpdateTasksStatus(task, "Pending")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
 		}
-		err = mysqldb.UpdateTasksStatus(task, "Pending")
-		if err != nil {
-			gologger.Error().Msg(err.Error())
-		}
+
 	}
 	return err
 }

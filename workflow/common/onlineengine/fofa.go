@@ -27,6 +27,7 @@ type FOFAResponseJson struct {
 }
 
 func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
+	status := true
 	if len(datalist) == 0 {
 		gologger.Info().Msg("获取到的FOFASEARCH任务为空，退出")
 	}
@@ -45,13 +46,19 @@ func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 		result := SearchFOFACore(keywords[0], appconfig.API.Fofa.Key, 9000, appconfig.CDNConfig.CDNBruteForceThreads)
 		//如果不成功，那么将禁用当前workflow的此功能模块
 		if result.SearchStatus != 1 {
-			gologger.Error().Msg("出错了，可能没有余额或者key错误，即将禁用workflow当前fofa搜索模块")
-			err = mysqldb.ProcessTasks(dbtask, "Failed")
-			if err != nil {
-				gologger.Error().Msg(err.Error())
+			gologger.Info().Msg("状态异常，10秒后重试中...")
+			time.Sleep(10 * time.Second)
+			result = SearchFOFACore(keywords[0], appconfig.API.Fofa.Key, 9000, appconfig.CDNConfig.CDNBruteForceThreads)
+			if result.SearchStatus != 1 {
+				gologger.Info().Msg("状态异常，10秒后重试中...")
+				result = SearchFOFACore(keywords[0], appconfig.API.Fofa.Key, 9000, appconfig.CDNConfig.CDNBruteForceThreads)
+				if result.SearchStatus != 1 {
+					gologger.Error().Msg("出错了，可能没有余额或者key错误，即将禁用workflow当前fofa搜索模块")
+					status = false
+					appconfig.OnlineAPI.IsFofa = false
+					break
+				}
 			}
-			appconfig.OnlineAPI.IsFofa = false
-			break
 		}
 		companyid, err := strconv.Atoi(keywords[1])
 		if err != nil {
@@ -76,6 +83,19 @@ func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 		err = mysqldb.ProcessTasksCount(dbtask, result.SearchCount)
 		if err != nil {
 			gologger.Error().Msg(err.Error())
+		}
+	}
+	if !status {
+		for _, data := range datalist {
+			keywords := strings.SplitN(data, "Findyou", 2)
+			dbtask, err := mysqldb.GetTasks(keywords[0])
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			err = mysqldb.ProcessTasks(dbtask, "Failed")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
 		}
 	}
 }
@@ -168,7 +188,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 		if port == "0" {
 			continue
 		}
-		//添加icp字段
+		//添加icp字段，但是目前不做操作，等到后续icpapi完成联动
 		if icp != "" {
 			targets.Icps = append(targets.Icps, icp)
 		} else {

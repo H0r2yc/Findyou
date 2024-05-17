@@ -1,17 +1,39 @@
 目标:
   名称:
-    - "中石油"
+    - "招商银行"
+    - "招银理财"
+    - "天津粤发股权投资"
+    - "招联消费金融"
+    - "招银金融租赁"
+    - "招银金租"
+    - "招商信诺人寿"
+    - "招商信诺资产管理"
+    - "招商信诺健康管理"
+    - "招商基金"
+    - "招商财富"
+    - "大连金石高尔夫俱乐部"
     # 目标域名:xxx.com,xxx.com,xxx.com
   域名:
-    -
+    - "cmbchina.com:招商银行"
+    - "cmbchinawm.com:招银理财"
+    - "mucfc.com:招联消费金融"
+    - "cmb-leasing.com:招银金融租赁"
+    - "cignacmb.com:招商信诺人寿"
+    - "cignacmbamc.com:招商信诺资产管理"
+    - "cignacmbhealth.com:招商信诺健康管理"
+    - "cmfchina.com:招商基金"
+    - "cmwachina.com:招商财富"
   ip:
     - ""
   cert:
   city:
     - ""
   gobal_keyword:
-    - "石油"
-    - "石化"
+    - "招商"
+    - "银行"
+    - "理财"
+    - "量化"
+    - "财富"
 
 自定义扫描:
   # 语法自定义:

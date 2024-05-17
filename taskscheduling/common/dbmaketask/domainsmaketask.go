@@ -38,12 +38,12 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 	fofakeywords = utils.RemoveDuplicateElement(fofakeywords)
 	if len(fofakeywords) != 0 {
 		//写入keywords到tasks，状态waitting
-		keywordtasks, err := mysqldb.WriteSearchwordOrDomainToTasks(fofakeywords, "FOFASEARCH")
+		keywordtasks, err := mysqldb.WriteStringListToTasks(fofakeywords, "FOFASEARCH")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
 		//写入subdomainbrute到tasks，状态waitting
-		domaintask, err := mysqldb.WriteSearchwordOrDomainToTasks(subdomainbrute, "SUBDOMAINBRUTE")
+		domaintask, err := mysqldb.WriteStringListToTasks(subdomainbrute, "SUBDOMAINBRUTE")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
@@ -55,13 +55,20 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
-
-			splitslice = utils.SplitSlice(fofakeywords, appconfig.Splittodb.Fofakeyword)
-			for i := 0; i < len(splitslice); i++ {
-				err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
+			if len(fofakeywords) <= 100 {
+				err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", fofakeywords)
 				if err != nil {
 					fmt.Println("Error writing data to Redis:", err)
 					return err
+				}
+			} else {
+				splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword)
+				for i := 0; i < len(splitslice); i++ {
+					err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
+					if err != nil {
+						fmt.Println("Error writing data to Redis:", err)
+						return err
+					}
 				}
 			}
 			for _, keyword := range keywordtasks {
@@ -73,11 +80,20 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 		}
 		//处理domain爆破
 		if len(subdomainbrute) != 0 {
-			for _, domain := range subdomainbrute {
-				err = redisdb.WriteDataToRedis(rediscon, "SUBDOMAINBRUTE", []string{domain})
+			if len(subdomainbrute) <= 100 {
+				err = redisdb.WriteDataToRedis(rediscon, "SUBDOMAINBRUTE", subdomainbrute)
 				if err != nil {
 					fmt.Println("Error writing data to Redis:", err)
 					return err
+				}
+			} else {
+				splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword)
+				for i := 0; i < len(splitslice); i++ {
+					err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
+					if err != nil {
+						fmt.Println("Error writing data to Redis:", err)
+						return err
+					}
 				}
 			}
 			for _, domain := range domaintask {

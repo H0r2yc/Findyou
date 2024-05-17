@@ -25,7 +25,7 @@ func main() {
 		//Done 改成获取tasks表中的状态，这样就不用多个表的判断了
 		Status, count := mysqldb.CheckAllTasksStatus("Completed")
 		if !Status {
-			gologger.Info().Msgf("当前 [%d] 任务未完成", count)
+			gologger.Info().Msgf("当前共 [%d] 任务未完成", count)
 			//检查tasks表的失败和取消的任务并重新生成task
 			err := dbmaketask.Taskmaketask("Failed")
 			if err != nil {
@@ -51,10 +51,6 @@ func main() {
 				gologger.Error().Msg(err.Error())
 			}
 			//检查targets表并生成目录列表和指纹识别任务
-			err = dbmaketask.TargetsMakeAliveScanTasks(appconfig)
-			if err != nil {
-				gologger.Error().Msg(err.Error())
-			}
 			time.Sleep(30 * time.Second)
 			continue
 		}
