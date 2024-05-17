@@ -38,11 +38,18 @@ func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 			gologger.Error().Msgf("没有在数据库中找到对应的task")
 		} else {
 			err = mysqldb.ProcessTasks(dbtask, "Processing")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
 		}
 		result := SearchFOFACore(keywords[0], appconfig.API.Fofa.Key, 9000, appconfig.CDNConfig.CDNBruteForceThreads)
 		//如果不成功，那么将禁用当前workflow的此功能模块
 		if result.SearchStatus != 1 {
 			gologger.Error().Msg("出错了，可能没有余额或者key错误，即将禁用workflow当前fofa搜索模块")
+			err = mysqldb.ProcessTasks(dbtask, "Failed")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
 			appconfig.OnlineAPI.IsFofa = false
 			break
 		}
@@ -99,7 +106,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	q.Add("page", "1")
 	q.Add("size", fmt.Sprintf("%d", pageSize))
 	//TODO 返回类型包含归属地和hash方便后面生成keyword
-	q.Add("fields", "host,protocol,title,icp,ip,port,domain")
+	q.Add("fields", "host,protocol,icp,ip,port,domain")
 	q.Add("full", "false")
 	req.URL.RawQuery = q.Encode()
 
@@ -147,12 +154,13 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	var ips []string
 	DomainIPMap := make(map[string]string)
 	domainCDNMap := make(map[string]bool)
-	var protocol, ip, port, host, domain string
+	var protocol, ip, port, host, domain, icp string
 	for _, result := range responseJson.Results {
 		host = result[0]
 		protocol = result[1]
-		ip = result[4]
-		port = result[5]
+		icp = result[2]
+		ip = result[3]
+		port = result[4]
 		//去除一些受保护的空白数据以及ipv6
 		if !utils.IsIPv4(ip) {
 			continue
@@ -160,9 +168,15 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 		if port == "0" {
 			continue
 		}
+		//添加icp字段
+		if icp != "" {
+			targets.Icps = append(targets.Icps, icp)
+		} else {
+			targets.Icps = append(targets.Icps, "")
+		}
 		//这儿赋值为""的目的是domain是根域名，不包含子域名，所有要后面处理后成为子域名
 		domain = ""
-		if result[6] != "" {
+		if result[5] != "" {
 			//这里添加的域名host直接到target只是一个端口，实际可能存在其他端口
 			if strings.Contains(host, "://") {
 				targets.Targets = append(targets.Targets, host)

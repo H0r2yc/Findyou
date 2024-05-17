@@ -32,6 +32,7 @@ type Targets struct {
 	Domains   []string
 	DomainIps []string
 	IPs       []string
+	Icps      []string
 	//DomainIPMap     map[string][]string
 	//DomainIPMapLock sync.Mutex
 	IsCDN        []uint
