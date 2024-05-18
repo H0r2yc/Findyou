@@ -26,7 +26,7 @@ func GetFromRedis(rediscon *redis.Client, appconfig *workflowstruct.Appconfig) (
 			continue
 		}
 		if key == "FOFASEARCH" {
-			if !appconfig.OnlineAPI.IsFofa {
+			if !appconfig.Module.Fofasearch {
 				continue
 			}
 		}

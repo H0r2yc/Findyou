@@ -55,7 +55,7 @@ func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 				if result.SearchStatus != 1 {
 					gologger.Error().Msg("出错了，可能没有余额或者key错误，即将禁用workflow当前fofa搜索模块")
 					status = false
-					appconfig.OnlineAPI.IsFofa = false
+					appconfig.Module.Fofasearch = false
 					break
 				}
 			}

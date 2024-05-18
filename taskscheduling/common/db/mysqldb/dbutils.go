@@ -107,19 +107,27 @@ func CheckAllTasksStatus(status string) (bool, int) {
 		gologger.Error().Msg("查询workflow状态失败")
 		return false, 0
 	}
+	gologger.Info().Msgf("未完成task [%d] 个", result.RowsAffected)
 	getwaitips, err := GetAllIPs("Completed", false)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}
+	gologger.Info().Msgf("未完成ip任务 [%d] 个", len(getwaitips))
 	getwaitdomain, err := GetAllDomains("Completed", false)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}
-	getwaittargets, err := GetTargets("Completed", false)
+	gologger.Info().Msgf("未完成domain任务 [%d] 个", len(getwaitdomain))
+	getwaittargets, err := GetTargets("WaitScan", true)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}
-	return result.RowsAffected == 0 && len(getwaittargets) == 0 && len(getwaitdomain) == 0 && len(getwaitips) == 0, int(result.RowsAffected)
+	getwaittargetswaiting, err := GetTargets("Waiting", true)
+	if err != nil {
+		gologger.Error().Msg(err.Error())
+	}
+	gologger.Info().Msgf("未完成target任务 [%d] 个", len(getwaittargets)+len(getwaittargetswaiting))
+	return result.RowsAffected == 0 && len(getwaittargets) == 0 && len(getwaitdomain) == 0 && len(getwaitips) == 0 && len(getwaittargetswaiting) == 0, int(result.RowsAffected)
 }
 
 // 从target.yaml中写入公司到DB

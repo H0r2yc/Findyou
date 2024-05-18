@@ -11,6 +11,7 @@ import (
 
 func TargetsMakeAliveScanTasks(appconfig *taskstruct.Appconfig) error {
 	rediscon := redisdb.GetRedisClient()
+	var taskcount int
 	var alivescanlist []string
 	var splitslice [][]string
 	var tasks []mysqldb.Tasks
@@ -40,8 +41,10 @@ func TargetsMakeAliveScanTasks(appconfig *taskstruct.Appconfig) error {
 				fmt.Println("Error writing data to Redis:", err)
 				return err
 			}
+			taskcount = 1
 		} else {
 			splitslice = utils.SplitSlice(alivescanlist, len(alivescanlist)/appconfig.Splittodb.Workflow)
+			taskcount = len(splitslice)
 			//写入alivelist到tasks，状态waitting
 			tasks, err = mysqldb.WriteTargetsToTasks(splitslice, len(splitslice), "ALIVESCAN")
 			if err != nil {
@@ -70,6 +73,6 @@ func TargetsMakeAliveScanTasks(appconfig *taskstruct.Appconfig) error {
 			gologger.Error().Msg(err.Error())
 		}
 	}
-	gologger.Info().Msgf("[%d] 个target已生成 [%d] 个任务", len(waittargets), len(splitslice))
+	gologger.Info().Msgf("[%d] 个target已生成 [%d] 个任务", len(waittargets), taskcount)
 	return nil
 }

@@ -14,6 +14,7 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 	gologger.Info().Msg("从配置文件生成任务")
 	KeyWords := makekeywordfromyaml(appconfig, targetconfig)
 	rediscon := redisdb.GetRedisClient()
+	var splitslice [][]string
 	//defer之后会导致后续redis无法操作
 	//defer redis.db.close()
 	if KeyWords.FofaKeyWords != nil {
@@ -31,8 +32,13 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 				gologger.Error().Msg(err.Error())
 			}
 			//写入keywords到redis
-			//appconfig.Splittodb.Fofakeyword根据最多数量来确定，目的是为了在出现问题的时候能在一定限度内控制将失败的task设置failed的状态，太多会造成后面资源的浪费
-			splitslice := utils.SplitSlice(KeyWords.FofaKeyWords, len(KeyWords.FofaKeyWords)/appconfig.Splittodb.Fofakeyword)
+			//如果大于100至少分成两份
+			if len(KeyWords.FofaKeyWords) <= 100 {
+				splitslice = utils.SplitSlice(KeyWords.FofaKeyWords, 2)
+			} else {
+				//appconfig.Splittodb.Fofakeyword根据最多数量来确定，目的是为了在出现问题的时候能在一定限度内控制将失败的task设置failed的状态，太多会造成后面资源的浪费
+				splitslice = utils.SplitSlice(KeyWords.FofaKeyWords, len(KeyWords.FofaKeyWords)/appconfig.Splittodb.Fofakeyword)
+			}
 			for i := 0; i < len(splitslice); i++ {
 				exists, err := redisdb.IsDataInSet(rediscon, "FOFASEARCH", splitslice[i])
 				if exists {
@@ -43,6 +49,7 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 					fmt.Println("Error writing data to Redis:", err)
 					return
 				}
+
 			}
 			for _, keyword := range tasks {
 				err = mysqldb.UpdateTasksStatus(keyword, "Pending")

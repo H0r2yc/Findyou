@@ -3,9 +3,14 @@ package httpxscan
 import (
 	"Findyou.WorkFlow/common/db/mysqldb"
 	"Findyou.WorkFlow/common/workflowstruct"
+	"bytes"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/httpx/runner"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
+	"io/ioutil"
 	"strings"
+	"unicode/utf8"
 )
 
 func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
@@ -38,6 +43,18 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 		RandomAgent:               true,
 		Threads:                   appconfig.Httpxconfig.WebThreads,
 		OnResult: func(resp runner.Result) {
+			// 检查 Title 是否为有效的 UTF-8 字符串
+			if !utf8.ValidString(resp.Title) {
+				reader := transform.NewReader(bytes.NewReader([]byte(resp.Title)), simplifiedchinese.GBK.NewDecoder())
+				utf8Data, err := ioutil.ReadAll(reader)
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
+				resp.Title = string(utf8Data)
+			}
+			if !utf8.ValidString(resp.Title) {
+				resp.Title = "未知编码的标题"
+			}
 			// handle error
 			if resp.Err != nil {
 				gologger.Error().Msgf("%s: %s\n", resp.Input, resp.Err)
@@ -45,6 +62,13 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 				target, err := mysqldb.GetTargetID(resp.URL)
 				if err != nil {
 					gologger.Error().Msg(err.Error())
+				}
+				//如果找不到target,通过input在搜索一次
+				if target.ID == 0 {
+					target, err = mysqldb.GetTargetID(resp.Input)
+					if err != nil {
+						gologger.Error().Msg(err.Error())
+					}
 				}
 				// 如果失败，设置状态为失败
 				err = mysqldb.ProcessTargets(target, resp.Title, "失败")
@@ -58,6 +82,13 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 			target, err := mysqldb.GetTargetID(resp.URL)
 			if err != nil {
 				gologger.Error().Msg(err.Error())
+			}
+			//如果找不到target,通过input在搜索一次
+			if target.ID == 0 {
+				target, err = mysqldb.GetTargetID(resp.Input)
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
 			}
 			if resp.StatusCode >= 200 && resp.StatusCode < 500 {
 				err = mysqldb.ProcessTargets(target, resp.Title, "存活")
