@@ -6,6 +6,7 @@ import (
 	"github.com/projectdiscovery/gologger"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/net/context"
+	"strings"
 )
 
 // 从 Redis 中取出元素并返回解码后的值
@@ -46,6 +47,10 @@ func GetFromRedis(rediscon *redis.Client, appconfig *workflowstruct.Appconfig) (
 		// 将值进行 JSON 解码
 		var data []string
 		err = json.Unmarshal([]byte(val), &data)
+		//这儿还没搞懂为什么数据多就直接返回了一个string而不是[]string
+		if len(data) == 1 && strings.Contains(data[0], ",") {
+			data = strings.Split(val, ",")
+		}
 		if err != nil {
 			return "", nil, err
 		}

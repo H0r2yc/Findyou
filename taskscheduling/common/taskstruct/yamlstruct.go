@@ -18,7 +18,7 @@ type Splittodb struct {
 	Fofakeyword   int `yaml:"fofakeyword"`
 	Hunterkeyword int `yaml:"hunterkeyword"`
 	Quakekeyword  int `yaml:"quakekeyword"`
-	Workflow      int `yaml:"workflow"`
+	Workflow      int `yaml:"targets"`
 }
 
 type OtherSet struct {

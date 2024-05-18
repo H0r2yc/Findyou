@@ -33,4 +33,4 @@ splittodb:
   hunterkeyword: 100
   quakekeyword: 100
   #根据workflow个数
-  workflow: 500
+  targets: 500

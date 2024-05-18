@@ -27,7 +27,7 @@ func main() {
 		if !Status {
 			gologger.Info().Msgf("当前共 [%d] 任务未完成", count)
 			//检查tasks表的失败和取消的任务并重新生成task
-			err := dbmaketask.Taskmaketask("Failed")
+			err := dbmaketask.Taskmaketask("Processing")
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
