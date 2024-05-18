@@ -38,12 +38,12 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 	fofakeywords = utils.RemoveDuplicateElement(fofakeywords)
 	if len(fofakeywords) != 0 {
 		//写入keywords到tasks，状态waitting
-		keywordtasks, err := mysqldb.WriteStringListToTasks(fofakeywords, "FOFASEARCH")
+		keywordtasks, err := mysqldb.WriteKeywordsToTasks(fofakeywords, "FOFASEARCH")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
 		//写入subdomainbrute到tasks，状态waitting
-		domaintask, err := mysqldb.WriteStringListToTasks(subdomainbrute, "SUBDOMAINBRUTE")
+		domaintask, err := mysqldb.WriteKeywordsToTasks(subdomainbrute, "SUBDOMAINBRUTE")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}

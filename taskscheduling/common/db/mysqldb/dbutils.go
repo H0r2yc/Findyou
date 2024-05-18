@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// GetNextTargetID 传入的table值为格式化后的表名
-func GetNextTargetID(db *gorm.DB, table string) (uint, error) {
+// GetNextID 传入的table值为格式化后的表名
+func GetNextID(db *gorm.DB, table string) (uint, error) {
 	var maxID uint
 	// 查询数据库表中最大的 target ID
 	err := db.Table(table).Select("COALESCE(MAX(id), 0)").Scan(&maxID).Error
@@ -138,7 +138,7 @@ func YamlCompanyToDB(targetconfig *taskstruct.Targetconfig) {
 		if exists {
 			continue
 		}
-		id, err := GetNextTargetID(db, "companies")
+		id, err := GetNextID(db, "companies")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 			continue

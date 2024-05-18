@@ -18,7 +18,7 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 	//defer redis.db.close()
 	if KeyWords.FofaKeyWords != nil {
 		//写入keywords到tasks，状态waitting
-		tasks, err := mysqldb.WriteStringListToTasks(KeyWords.FofaKeyWords, "FOFASEARCH")
+		tasks, err := mysqldb.WriteKeywordsToTasks(KeyWords.FofaKeyWords, "FOFASEARCH")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}

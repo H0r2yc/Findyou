@@ -53,7 +53,7 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 				}
 				return
 			}
-			gologger.Silent().Msgf("[HTTPX] [%d] %s [%s]\n", resp.StatusCode, resp.URL, resp.Title)
+			gologger.Info().Msgf("[HTTPX] [%d] %s [%s]\n", resp.StatusCode, resp.URL, resp.Title)
 			//查找target
 			target, err := mysqldb.GetTargetID(resp.URL)
 			if err != nil {

@@ -32,7 +32,7 @@ func WriteToTasks(db *gorm.DB, tasks Tasks) error {
 	return nil
 }
 
-func WriteStringListToTasks(searchlist []string, TaskName string) ([]Tasks, error) {
+func WriteKeywordsToTasks(searchlist []string, TaskName string) ([]Tasks, error) {
 	var tasks []Tasks
 	database := GetDB()
 	defer CloseDB(database)
@@ -54,7 +54,7 @@ func WriteStringListToTasks(searchlist []string, TaskName string) ([]Tasks, erro
 		if exists {
 			continue
 		}
-		id, err := GetNextTargetID(database, "Tasks")
+		id, err := GetNextID(database, "Tasks")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 			continue
@@ -69,6 +69,36 @@ func WriteStringListToTasks(searchlist []string, TaskName string) ([]Tasks, erro
 		err = WriteToTasks(database, taskstruct)
 		tasks = append(tasks, taskstruct)
 	}
+	return tasks, nil
+}
+
+func WriteNoFindyouToTasks(datas []string, TaskName string) ([]Tasks, error) {
+	var tasks []Tasks
+	database := GetDB()
+	defer CloseDB(database)
+	if database == nil {
+		return nil, errors.New("获取数据库连接失败")
+	}
+	exists, err := CheckDuplicateRecord(database, "Tasks", "Task", strings.Join(datas, ","))
+	if err != nil {
+		gologger.Error().Msg(err.Error())
+	}
+	if exists {
+		return tasks, nil
+	}
+	id, err := GetNextID(database, "Tasks")
+	if err != nil {
+		gologger.Error().Msg(err.Error())
+		return tasks, errors.New("获取不到下一个TaskID")
+	}
+	taskstruct := Tasks{
+		ID:       id,
+		TaskName: TaskName,
+		Task:     strings.Join(datas, ","),
+		Status:   "Waiting",
+	}
+	err = WriteToTasks(database, taskstruct)
+	tasks = append(tasks, taskstruct)
 	return tasks, nil
 }
 
@@ -92,7 +122,7 @@ func WriteTargetsToTasks(TargetsList [][]string, ListSize int, TaskName string) 
 		if exists {
 			continue
 		}
-		id, err := GetNextTargetID(database, "Tasks")
+		id, err := GetNextID(database, "Tasks")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 			continue

@@ -29,8 +29,8 @@ redis:
 
 #写入redis的数据都分入几个库
 splittodb:
-  fofakeyword: 2
-  hunterkeyword: 1
-  quakekeyword: 1
+  fofakeyword: 100
+  hunterkeyword: 100
+  quakekeyword: 100
   #根据workflow个数
-  workflow: 3
+  workflow: 500

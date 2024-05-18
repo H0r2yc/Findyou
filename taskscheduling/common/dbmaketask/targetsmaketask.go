@@ -28,7 +28,7 @@ func TargetsMakeAliveScanTasks(appconfig *taskstruct.Appconfig) error {
 	if len(alivescanlist) != 0 {
 		if len(alivescanlist) <= 500 {
 			//写入keywords到tasks，状态waitting
-			tasks, err = mysqldb.WriteStringListToTasks(alivescanlist, "ALIVESCAN")
+			tasks, err = mysqldb.WriteNoFindyouToTasks(alivescanlist, "ALIVESCAN")
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
