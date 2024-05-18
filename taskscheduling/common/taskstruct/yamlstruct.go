@@ -22,7 +22,8 @@ type Splittodb struct {
 }
 
 type OtherSet struct {
-	DBScan bool `yaml:"跳过配置从数据库扫描"`
+	DBScan       bool `yaml:"跳过配置从数据库扫描"`
+	DomainSearch bool `yaml:"生成扩展的domainsearch"`
 }
 
 type API struct {

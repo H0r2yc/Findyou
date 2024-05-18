@@ -53,4 +53,5 @@
 
 其他扫描选项:
   跳过配置从数据库扫描: false
+  生成扩展的domainsearch: false
 
