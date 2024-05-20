@@ -5,6 +5,7 @@ import (
 	"Findyou.TaskScheduling/common/taskstruct"
 	"fmt"
 	"github.com/projectdiscovery/gologger"
+	"strconv"
 	"strings"
 )
 
@@ -29,7 +30,7 @@ func makekeywordfromyaml(appconfig *taskstruct.Appconfig, targetconfig *taskstru
 func Makekeywordfromdb(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targetconfig, data, datatype string, companyid uint) mysqldb.KeywordsList {
 	var Keywords mysqldb.KeywordsList
 	if appconfig.OnlineAPI.Fofa {
-		Keywords.FofaKeyWords = DBFOFAMakeKeyword(targetconfig, data, datatype, companyid)
+		Keywords.FofaKeyWord = DBFOFAMakeKeyword(targetconfig, data, datatype, companyid)
 	}
 	if appconfig.OnlineAPI.Hunter {
 		Keywords.HunterKeyWords = HunterMakeKeyword(targetconfig)
@@ -40,25 +41,25 @@ func Makekeywordfromdb(appconfig *taskstruct.Appconfig, targetconfig *taskstruct
 	return Keywords
 }
 
-func DBFOFAMakeKeyword(targetconfig *taskstruct.Targetconfig, data, datatype string, companyid uint) []string {
+func DBFOFAMakeKeyword(targetconfig *taskstruct.Targetconfig, data, datatype string, companyid uint) string {
 	//判断如果ip属于定义的归属地，那么就直接/24，如果不是那么就下面
 	var searchlist []string
 	if datatype == "IP" {
 		for _, globalkeyword := range targetconfig.Target.Gobal_keywords {
 			//Todo 如果是归属地相同或者重点ip表中，那么就直接/24
 			if globalkeyword != "" {
-				searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data, globalkeyword, companyid))
+				searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data, globalkeyword))
 			} else {
 				//TODO 根据cert或者iconhash等等做匹配
-				searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data, companyid))
+				searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
 			}
 		}
-		return searchlist
+		return "(" + strings.Join(searchlist, ") || (") + ")Findyou" + strconv.Itoa(int(companyid))
 	} else if datatype == "Domains" {
-		searchlist = append(searchlist, fmt.Sprintf("domain=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data, companyid))
-		return searchlist
+		searchlist = append(searchlist, fmt.Sprintf("domain=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
+		return "(" + strings.Join(searchlist, ") || (") + ")Findyou" + strconv.Itoa(int(companyid))
 	}
-	return nil
+	return ""
 }
 
 func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
@@ -79,7 +80,7 @@ func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	for _, ipcompany := range targetlist.Target.IP {
 		if ipcompany != "" {
 			data := strings.SplitN(ipcompany, ":", 2)
-			keyword = fmt.Sprintf("cert=\"%s\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("ip=\"%s/24\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 
 		}
@@ -113,10 +114,10 @@ func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	return searchlist
 }
 
-func HunterMakeKeyword(targetconfig *taskstruct.Targetconfig) []string {
-	return nil
+func HunterMakeKeyword(targetconfig *taskstruct.Targetconfig) string {
+	return "nil"
 }
 
-func QuakeMakeKeyword(targetconfig *taskstruct.Targetconfig) []string {
-	return nil
+func QuakeMakeKeyword(targetconfig *taskstruct.Targetconfig) string {
+	return "nil"
 }

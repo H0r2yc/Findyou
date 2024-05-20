@@ -16,6 +16,7 @@ func IPsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targe
 	//var hunterkeywords []string
 	//var quakekeywords []string
 	var splitslice [][]string
+	var taskcount int
 	waitips, err := mysqldb.GetAllIPs("Waiting", true)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
@@ -26,7 +27,9 @@ func IPsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targe
 	}
 	for _, task := range waitips {
 		keyword := makekeywords.Makekeywordfromdb(appconfig, targetconfig, task.IP, "IP", task.CompanyID)
-		fofakeywords = append(fofakeywords, keyword.FofaKeyWords...)
+		fofakeywords = append(fofakeywords, keyword.FofaKeyWord)
+		//hunter
+		//quake
 	}
 	if len(fofakeywords) != 0 {
 		//写入keywords到tasks，状态waitting
@@ -44,6 +47,7 @@ func IPsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targe
 			gologger.Error().Msg(err.Error())
 		}
 		if len(fofakeywords) <= 100 {
+			taskcount = 1
 			err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", fofakeywords)
 			if err != nil {
 				fmt.Println("Error writing data to Redis:", err)
@@ -74,6 +78,6 @@ func IPsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targe
 			gologger.Error().Msg(err.Error())
 		}
 	}
-	gologger.Info().Msgf("[%d] 个ip已生成 [%d] 个任务", len(waitips), len(splitslice))
+	gologger.Info().Msgf("[%d] 个ip已生成 [%d] 个任务", len(waitips), len(splitslice)+taskcount)
 	return nil
 }

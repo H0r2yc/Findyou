@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func TargetsToDB(TargetList []string, companyid uint) error {
+func TargetsToDB(TargetList []string, companyid, taskid uint) error {
 	if len(TargetList) == 0 {
 		return nil
 	}
@@ -25,6 +25,7 @@ func TargetsToDB(TargetList []string, companyid uint) error {
 		targetdb := Targets{
 			Target:    target,
 			CompanyID: companyid,
+			TaskID:    taskid,
 			Status:    "Waiting",
 		}
 		err = WriteToTargets(database, targetdb)

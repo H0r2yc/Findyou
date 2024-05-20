@@ -57,6 +57,7 @@ type Targets struct {
 	Target    string
 	Title     string
 	CompanyID uint
+	TaskID    uint
 	Status    string
 }
 

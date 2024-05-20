@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/retryablehttp-go"
+	"golang.org/x/net/publicsuffix"
 	"io"
 	"net/http"
 	"strconv"
@@ -64,7 +65,7 @@ func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 		if err != nil {
 			companyid = 999
 		}
-		err = mysqldb.TargetsToDB(result.Targets, uint(companyid))
+		err = mysqldb.TargetsToDB(result.Targets, uint(companyid), dbtask.ID)
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
@@ -181,6 +182,17 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 		icp = result[2]
 		ip = result[3]
 		port = result[4]
+		//判断语法是不是domain=xxx，结果会存在一些xxx.com.zzz.com，故意做的引流，检测是否是根域名，不是的话就下一个
+		if strings.Contains(keyword, "domain=") {
+			rootdomain, err := publicsuffix.EffectiveTLDPlusOne(result[5])
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			inputdomain := strings.Split(keyword, "=")
+			if rootdomain != strings.ReplaceAll(inputdomain[1], "\"", "") {
+				continue
+			}
+		}
 		//去除一些受保护的空白数据以及ipv6
 		if !utils.IsIPv4(ip) {
 			continue
@@ -225,7 +237,8 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	Domains = utils.RemoveDuplicateElement(Domains)
 	//如果语法是ip扫描，就不探测cdn了，而且ip也不会进入到ips库中继续等待扫描，因为使用的语法是/24，重复扫描
 	//TODO 如果是domain那么前面就不添加对应的ip，避免是cdn节点，如果不是节点那么添加ip到ips表
-	if !strings.Contains(keyword, "ip=") && len(Domains) != 0 {
+	//if !strings.Contains(keyword, "ip=") && len(Domains) != 0 {
+	if len(Domains) != 0 {
 		gologger.Info().Msgf("正在查询 [%v] 个域名是否为CDN资产", len(Domains))
 		cdnDomains, normalDomains, _ := cdn.CheckCDNs(Domains, cdnthread)
 		gologger.Info().Msgf("CDN资产为 [%v] 个", len(cdnDomains))

@@ -61,7 +61,7 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 			gologger.Info().Msg("已经从配置文件生成过相关任务，且无新增目标，跳过")
 		}
 	}
-	if KeyWords.HunterKeyWords != nil {
+	if KeyWords.HunterKeyWords != "" {
 		//xxxx
 	}
 	gologger.Info().Msg("从配置文件生成任务成功")

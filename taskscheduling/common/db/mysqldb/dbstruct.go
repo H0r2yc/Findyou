@@ -23,8 +23,9 @@ Paused（已暂停）
 
 type KeywordsList struct {
 	FofaKeyWords   []string
-	HunterKeyWords []string
-	QuakeKeyWords  []string
+	FofaKeyWord    string
+	HunterKeyWords string
+	QuakeKeyWords  string
 }
 
 // 定义数据库模型
@@ -63,6 +64,7 @@ type Targets struct {
 	Target    string
 	Title     string
 	CompanyID uint
+	TaskID    uint
 	Status    string
 }
 
