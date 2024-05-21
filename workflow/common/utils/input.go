@@ -62,6 +62,26 @@ func IsIPPort(str string) bool {
 	return true
 }
 
+func FromKeywordGetDomain(keyword string) string {
+	if strings.Contains(keyword, "||") {
+		firstkeyword := strings.Split(keyword, "||")[0]
+		firstkeyword = strings.ReplaceAll(firstkeyword, "(", "")
+		firstkeyword = strings.ReplaceAll(firstkeyword, ")", "")
+		if strings.Contains(firstkeyword, "&&") {
+			keyword = strings.Split(strings.Split(firstkeyword, "&&")[0], "=")[0]
+		} else {
+			keyword = strings.Split(firstkeyword, "=")[1]
+		}
+	} else {
+		if strings.Contains(keyword, "&&") {
+			keyword = strings.Split(strings.Split(keyword, "&&")[0], "=")[1]
+		} else {
+			keyword = strings.Split(keyword, "=")[1]
+		}
+	}
+	return keyword
+}
+
 // IsPort checks if a string represents a valid port
 func IsPort(str string) bool {
 	if i, err := strconv.Atoi(str); err == nil && i > 0 && i < 65536 {

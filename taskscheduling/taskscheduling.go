@@ -41,22 +41,29 @@ func main() {
 				gologger.Error().Msg(err.Error())
 			}
 			//检查domains表并生成任务,搜索语句和子域名爆破
+			//托管的第三方公司，是否可以后面通过host和domain的组合语法，对出来的域名不进行后续的联想收集操作
 			err = dbmaketask.Domainsmaketask(appconfig, targetconfig)
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
 			//检查targets表并生成存活探测任务
-			err = dbmaketask.TargetsMakeAliveScanTasks(appconfig)
+			err = dbmaketask.TargetsMakeAliveScanTasks(appconfig, "Waiting")
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
 			//检查targets表并生成目录列表和指纹识别任务
-			//探测是否redis为空，如果为空那么就重新提交Pending任务
+
+			//探测是否redis为空，如果为空那么就重新提交Pending任务和target的waitscan任务
 			if redisdb.RedisIsNull() {
 				err := dbmaketask.Taskmaketask("Pending")
 				if err != nil {
 					gologger.Error().Msg(err.Error())
 				}
+			}
+			//检查targets表并生成存活探测任务
+			err = dbmaketask.TargetsMakeAliveScanTasks(appconfig, "WaitScan")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
 			}
 			time.Sleep(30 * time.Second)
 			continue
@@ -67,7 +74,8 @@ func main() {
 		gologger.Info().Msg("Workflow状态未结束或任务列表有未完成的任务")
 		time.Sleep(30 * time.Second)
 	}
-	gologger.Info().Msg("所有任务结束,调度模块停止")
+	gologger.Info().Msg("所有任务结束,调度模块即将停止")
+	time.Sleep(10 * time.Second)
 }
 
 func prepare() (*taskstruct.Appconfig, *taskstruct.Targetconfig) {

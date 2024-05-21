@@ -49,10 +49,10 @@ type Target struct {
 }
 
 type customizesyntax struct {
-	Fofa        []string `yaml:"fofa"`
-	Hunter      []string `yaml:"hunter"`
-	Quake       []string `yaml:"quake"`
-	SearchLevel int      `yaml:"递归搜索等级"`
+	Fofa    []string `yaml:"fofa"`
+	Hunter  []string `yaml:"hunter"`
+	Quake   []string `yaml:"quake"`
+	DirPath []string `yaml:"自定义目录"`
 }
 
 type OnlineAPI struct {

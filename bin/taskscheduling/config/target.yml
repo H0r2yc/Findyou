@@ -47,8 +47,11 @@
   quake:
     - ""
     -
-  递归搜索等级: 2
+  自定义目录:
+    - "test"
+    - "login"
+    - "admin"
 
 其他扫描选项:
   跳过配置从数据库扫描: false
-  生成扩展的domainsearch: false
+  生成扩展的domainsearch: true

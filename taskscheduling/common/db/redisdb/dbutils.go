@@ -17,7 +17,7 @@ func RedisIsNull() bool {
 	if size := result.Val(); size == 0 {
 		return true
 	} else {
-		gologger.Info().Msgf("还有 %d 任务待执行\n", size)
+		gologger.Info().Msgf("还有 [%d] 类型任务待执行\n", size)
 		return false
 	}
 }

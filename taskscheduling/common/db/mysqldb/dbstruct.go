@@ -22,6 +22,7 @@ Paused（已暂停）
 //AQCQCCSCAN
 
 type KeywordsList struct {
+	//keywords是为了第一次生成的时候用，后面db生成不再需要
 	FofaKeyWords   []string
 	FofaKeyWord    string
 	HunterKeyWords string
@@ -52,11 +53,12 @@ type IPs struct {
 }
 
 type Fingerprints struct {
-	ID          uint `gorm:"primaryKey"`
-	Url         string
-	Fingerprint string
-	CompanyID   uint
-	Status      string
+	ID        uint `gorm:"primaryKey"`
+	Url       string
+	Finger    string
+	vuln      string
+	CompanyID uint
+	Status    string
 }
 
 type Targets struct {

@@ -43,6 +43,7 @@ func Makekeywordfromdb(appconfig *taskstruct.Appconfig, targetconfig *taskstruct
 
 func DBFOFAMakeKeyword(targetconfig *taskstruct.Targetconfig, data, datatype string, companyid uint) string {
 	//判断如果ip属于定义的归属地，那么就直接/24，如果不是那么就下面
+	//TODO 后面把country这种全局的条件通过从yaml中读取
 	var searchlist []string
 	if datatype == "IP" {
 		for _, globalkeyword := range targetconfig.Target.Gobal_keywords {
@@ -57,6 +58,7 @@ func DBFOFAMakeKeyword(targetconfig *taskstruct.Targetconfig, data, datatype str
 		return "(" + strings.Join(searchlist, ") || (") + ")Findyou" + strconv.Itoa(int(companyid))
 	} else if datatype == "Domains" {
 		searchlist = append(searchlist, fmt.Sprintf("domain=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
+		searchlist = append(searchlist, fmt.Sprintf("cert=\"%s\" && domain!=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data, data))
 		return "(" + strings.Join(searchlist, ") || (") + ")Findyou" + strconv.Itoa(int(companyid))
 	}
 	return ""
@@ -71,16 +73,16 @@ func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	}
 	for _, name := range targetlist.Target.Name {
 		if name != "" {
-			keyword = fmt.Sprintf("cert=\"%s\"Findyou%d", name, taskstruct.CompanyID[name])
+			keyword = fmt.Sprintf("cert=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", name, taskstruct.CompanyID[name])
 			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("title=\"%s\" && title=\"系统\"Findyou%d", name, taskstruct.CompanyID[name])
+			keyword = fmt.Sprintf("title=\"%s\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", name, taskstruct.CompanyID[name])
 			searchlist = append(searchlist, keyword)
 		}
 	}
 	for _, ipcompany := range targetlist.Target.IP {
 		if ipcompany != "" {
 			data := strings.SplitN(ipcompany, ":", 2)
-			keyword = fmt.Sprintf("ip=\"%s/24\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("ip=\"%s/24\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 
 		}
@@ -89,18 +91,18 @@ func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	for _, domain := range targetlist.Target.Domain {
 		if domain != "" {
 			data := strings.SplitN(domain, ":", 2)
-			keyword = fmt.Sprintf("domain=\"%s\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("domain=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("host=\"%s\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("host=\"%s\" && domain!=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("cert=\"%s\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("cert=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 		}
 	}
 	for _, cert := range targetlist.Target.Cert {
 		if cert != "" {
 			data := strings.SplitN(cert, ":", 2)
-			keyword = fmt.Sprintf("cert=\"%s\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("cert=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 
 		}

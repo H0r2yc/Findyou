@@ -1,21 +1,37 @@
 目标:
   名称:
-    - "泓书信息科技"
-    - "友趣视频"
+    - "招商银行"
+    - "招银理财"
+    - "天津粤发股权投资"
+    - "招联消费金融"
+    - "招银金融租赁"
+    - "招银金租"
+    - "招商信诺人寿"
+    - "招商信诺资产管理"
+    - "招商信诺健康管理"
+    - "招商基金"
+    - "招商财富"
+    - "大连金石高尔夫俱乐部"
     # 目标域名:xxx.com,xxx.com,xxx.com
   域名:
-    - "youyoushipin.top:泓书信息科技"
-    -
+    - "cmbchina.com:招商银行"
+    - "cmbchinawm.com:招银理财"
+    - "mucfc.com:招联消费金融"
+    - "cmb-leasing.com:招银金融租赁"
+    - "cignacmb.com:招商信诺人寿"
+    - "cignacmbamc.com:招商信诺资产管理"
+    - "cignacmbhealth.com:招商信诺健康管理"
+    - "cmfchina.com:招商基金"
+    - "cmwachina.com:招商财富"
   ip:
-    - "1.1.1.1:泓书信息科技"
+    - ""
   cert:
   city:
-    - "上海"
+    - ""
   gobal_keyword:
-    - "视频"
-    - "小红书"
-    - "友趣"
-    - "系统"
+    - "招商银行"
+    - "招银"
+    - "量化"
 
 自定义扫描:
   # 语法自定义:
@@ -35,4 +51,4 @@
 
 其他扫描选项:
   跳过配置从数据库扫描: false
-
+  生成扩展的domainsearch: true

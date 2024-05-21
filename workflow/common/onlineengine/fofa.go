@@ -127,7 +127,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	q.Add("page", "1")
 	q.Add("size", fmt.Sprintf("%d", pageSize))
 	//TODO 返回类型包含归属地和hash方便后面生成keyword
-	q.Add("fields", "host,protocol,icp,ip,port,domain")
+	q.Add("fields", "host,protocol,ip,port,domain")
 	q.Add("full", "false")
 	req.URL.RawQuery = q.Encode()
 
@@ -175,24 +175,12 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	var ips []string
 	DomainIPMap := make(map[string]string)
 	domainCDNMap := make(map[string]bool)
-	var protocol, ip, port, host, domain, icp string
+	var protocol, ip, port, host, domain string
 	for _, result := range responseJson.Results {
 		host = result[0]
 		protocol = result[1]
-		icp = result[2]
-		ip = result[3]
-		port = result[4]
-		//判断语法是不是domain=xxx，结果会存在一些xxx.com.zzz.com，故意做的引流，检测是否是根域名，不是的话就下一个
-		if strings.Contains(keyword, "domain=") {
-			rootdomain, err := publicsuffix.EffectiveTLDPlusOne(result[5])
-			if err != nil {
-				gologger.Error().Msg(err.Error())
-			}
-			inputdomain := strings.Split(keyword, "=")
-			if rootdomain != strings.ReplaceAll(inputdomain[1], "\"", "") {
-				continue
-			}
-		}
+		ip = result[2]
+		port = result[3]
 		//去除一些受保护的空白数据以及ipv6
 		if !utils.IsIPv4(ip) {
 			continue
@@ -200,15 +188,23 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 		if port == "0" {
 			continue
 		}
-		//添加icp字段，但是目前不做操作，等到后续icpapi完成联动
-		if icp != "" {
-			targets.Icps = append(targets.Icps, icp)
-		} else {
-			targets.Icps = append(targets.Icps, "")
+		if protocol == "tls" {
+			protocol = "https"
 		}
 		//这儿赋值为""的目的是domain是根域名，不包含子域名，所有要后面处理后成为子域名
 		domain = ""
-		if result[5] != "" {
+		if result[4] != "" {
+			//判断语法是不是domain=xxx或者host=xxx，结果会存在一些xxx.com.zzz.com，故意做的引流，检测是否是根域名，不是的话就下一个
+			if strings.Contains(keyword, "domain=") || strings.Contains(keyword, "host=") {
+				rootdomain, err := publicsuffix.EffectiveTLDPlusOne(result[4])
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
+				keyworddomain := utils.FromKeywordGetDomain(keyword)
+				if rootdomain != strings.TrimSpace(strings.ReplaceAll(keyworddomain, "\"", "")) {
+					continue
+				}
+			}
 			//这里添加的域名host直接到target只是一个端口，实际可能存在其他端口
 			if strings.Contains(host, "://") {
 				targets.Targets = append(targets.Targets, host)
@@ -227,8 +223,8 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 				targets.Targets = append(targets.Targets, protocol+"://"+host)
 			}
 			if !strings.Contains(keyword, "ip=") {
-				if !mysqldb.Isipclr(result[4]) {
-					ips = append(targets.IPs, result[4])
+				if !mysqldb.Isipclr(result[3]) {
+					ips = append(targets.IPs, result[3])
 				}
 			}
 		}

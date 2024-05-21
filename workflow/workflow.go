@@ -63,6 +63,6 @@ func Workflowrun() {
 		//所有存活探测结束之后再做poc，防止被禁了ip导致其他后面的目标存活探测都为异常
 		//pocs.PocScan()
 		gologger.Info().Msg("当前任务运行结束")
-		time.Sleep(1 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }

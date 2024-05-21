@@ -9,13 +9,13 @@ import (
 	"github.com/projectdiscovery/gologger"
 )
 
-func TargetsMakeAliveScanTasks(appconfig *taskstruct.Appconfig) error {
+func TargetsMakeAliveScanTasks(appconfig *taskstruct.Appconfig, status string) error {
 	rediscon := redisdb.GetRedisClient()
 	var taskcount int
 	var alivescanlist []string
 	var splitslice [][]string
 	var tasks []mysqldb.Tasks
-	waittargets, err := mysqldb.GetTargets("Waiting", true)
+	waittargets, err := mysqldb.GetTargets(status, true)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 		return err

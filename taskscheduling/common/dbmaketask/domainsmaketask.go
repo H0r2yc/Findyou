@@ -30,7 +30,7 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 	for _, domainstruct := range waitdomains {
 		if targetconfig.OtherSet.DomainSearch {
 			keyword := makekeywords.Makekeywordfromdb(appconfig, targetconfig, domainstruct.RootDomain, "Domains", domainstruct.CompanyID)
-			fofakeywords = append(fofakeywords, keyword.FofaKeyWords...)
+			fofakeywords = append(fofakeywords, keyword.FofaKeyWord)
 			//hunterkeywords = append(hunterkeywords, keyword.HunterKeyWords...)
 			//quakekeywords = append(quakekeywords, keyword.QuakeKeyWords...)
 		}
