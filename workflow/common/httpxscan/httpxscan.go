@@ -57,7 +57,7 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 			}
 			// handle error
 			if resp.Err != nil {
-				gologger.Error().Msgf("%s: %s\n", resp.Input, resp.Err)
+				gologger.Info().Msgf("请求错误: %s: %s\n", resp.Input, resp.Err)
 				//查找target
 				target, err := mysqldb.GetTargetID(resp.URL)
 				if err != nil {
@@ -73,7 +73,7 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 				// 如果失败，设置状态为失败
 				err = mysqldb.ProcessTargets(target, resp.Title, "失败")
 				if err != nil {
-					gologger.Error().Msgf("Failed to process target: %s", err.Error())
+					gologger.Error().Msgf("Failed to process target: %s,inputurl: %s", err.Error(), resp.Input)
 				}
 				return
 			}
@@ -96,7 +96,7 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 				err = mysqldb.ProcessTargets(target, resp.Title, "非正常状态码")
 			}
 			if err != nil {
-				gologger.Error().Msgf("Failed to process target: %s", err.Error())
+				gologger.Error().Msgf("Failed to process target: %s,inputurl: %s", err.Error(), resp.Input)
 			}
 		},
 	}

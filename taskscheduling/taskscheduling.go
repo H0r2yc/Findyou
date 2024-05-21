@@ -52,18 +52,19 @@ func main() {
 				gologger.Error().Msg(err.Error())
 			}
 			//检查targets表并生成目录列表和指纹识别任务
-
 			//探测是否redis为空，如果为空那么就重新提交Pending任务和target的waitscan任务
 			if redisdb.RedisIsNull() {
+				gologger.Info().Msg("redis为空且有任务未完成，等待1分钟重新提交任务")
+				time.Sleep(60 * time.Second)
 				err := dbmaketask.Taskmaketask("Pending")
 				if err != nil {
 					gologger.Error().Msg(err.Error())
 				}
-			}
-			//检查targets表并生成存活探测任务
-			err = dbmaketask.TargetsMakeAliveScanTasks(appconfig, "WaitScan")
-			if err != nil {
-				gologger.Error().Msg(err.Error())
+				//检查targets表并生成存活探测任务
+				err = dbmaketask.TargetsMakeAliveScanTasks(appconfig, "WaitScan")
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
 			}
 			time.Sleep(30 * time.Second)
 			continue

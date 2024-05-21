@@ -164,7 +164,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 
 	if responseJson.Size == 0 {
 		targets.SearchStatus = 1
-		gologger.Error().Msgf("[Fofa] [%s] 无结果。", keyword)
+		gologger.Info().Msgf("[Fofa] [%s] 无结果。", keyword)
 		return targets
 	}
 	targets.SearchStatus = 1
