@@ -47,16 +47,17 @@ type Result struct {
 	Location           string                 `json:"location,omitempty" csv:"location"`
 	Title              string                 `json:"title,omitempty" csv:"title"`
 	str                string
-	Scheme             string                 `json:"scheme,omitempty" csv:"scheme"`
-	Error              string                 `json:"error,omitempty" csv:"error"`
-	WebServer          string                 `json:"webserver,omitempty" csv:"webserver"`
-	ResponseBody       string                 `json:"body,omitempty" csv:"body"`
-	BodyPreview        string                 `json:"body_preview,omitempty" csv:"body_preview"`
-	ContentType        string                 `json:"content_type,omitempty" csv:"content_type"`
-	Method             string                 `json:"method,omitempty" csv:"method"`
-	Host               string                 `json:"host,omitempty" csv:"host"`
-	Path               string                 `json:"path,omitempty" csv:"path"`
-	FavIconMMH3        string                 `json:"favicon,omitempty" csv:"favicon"`
+	Scheme             string `json:"scheme,omitempty" csv:"scheme"`
+	Error              string `json:"error,omitempty" csv:"error"`
+	WebServer          string `json:"webserver,omitempty" csv:"webserver"`
+	ResponseBody       string `json:"body,omitempty" csv:"body"`
+	BodyPreview        string `json:"body_preview,omitempty" csv:"body_preview"`
+	ContentType        string `json:"content_type,omitempty" csv:"content_type"`
+	Method             string `json:"method,omitempty" csv:"method"`
+	Host               string `json:"host,omitempty" csv:"host"`
+	Path               string `json:"path,omitempty" csv:"path"`
+	FavIconMMH3        string `json:"favicon,omitempty" csv:"favicon"`
+	IConHash_MD5       string
 	FaviconPath        string                 `json:"favicon_path,omitempty" csv:"favicon_path"`
 	FinalURL           string                 `json:"final_url,omitempty" csv:"final_url"`
 	ResponseHeaders    map[string]interface{} `json:"header,omitempty" csv:"header"`
@@ -86,8 +87,6 @@ type Result struct {
 	ScreenshotPath     string                 `json:"screenshot_path,omitempty" csv:"screenshot_path"`
 	ScreenshotPathRel  string                 `json:"screenshot_path_rel,omitempty" csv:"screenshot_path_rel"`
 	KnowledgeBase      map[string]interface{} `json:"knowledgebase,omitempty" csv:"knowledgebase"`
-	Body               string
-	Header             string
 }
 
 // function to get dsl variables from result struct

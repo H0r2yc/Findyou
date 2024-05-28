@@ -32,12 +32,12 @@ func CheckDuplicateRecord(database *gorm.DB, tableName string, columnName string
 		existingRecord = &Domains{}
 	case "IPs":
 		existingRecord = &IPs{}
-	case "Fingerprints":
-		existingRecord = &Fingerprints{}
+	case "HighLevelTargets":
+		existingRecord = &HighLevelTargets{}
 	case "Targets":
 		existingRecord = &Targets{}
-	case "URLs":
-		existingRecord = &URLs{}
+	case "SensitiveInfo":
+		existingRecord = &SensitiveInfo{}
 	case "Keywords":
 		existingRecord = &Keywords{}
 	case "Tasks":

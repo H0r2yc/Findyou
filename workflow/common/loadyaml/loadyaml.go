@@ -6,12 +6,12 @@ import (
 	_ "embed"
 	"github.com/projectdiscovery/gologger"
 	"gopkg.in/yaml.v3"
-	"strings"
 )
 
 //go:embed yaml/dir.yaml
 var EmbedDirDBData string
 
+// TODO 先不管主动探测
 func ReadDirYml() {
 	// 读取dir.yaml内容
 	fps := make(map[string]interface{})
@@ -35,100 +35,14 @@ func ReadDirYml() {
 	}
 }
 
-//go:embed yaml/finger.yaml
+//go:embed yaml/web_fingerprint_v3.json
 var EmbedFingerData string
 
 func LoadFinger() {
-	fps := make(map[string]interface{})
-	err := yaml.Unmarshal([]byte(EmbedFingerData), &fps)
+	err := yaml.Unmarshal([]byte(EmbedFingerData), &workflowstruct.FingerPrints)
 	if err != nil {
 		gologger.Fatal().Msg(err.Error())
 	}
-
-	m := make(map[string][]string)
-
-	for productName, rulesInterface := range fps {
-		for _, ruleInterface := range rulesInterface.([]interface{}) {
-			ruleL := ruleInterface.(string)
-			_, ok := m[productName]
-			if ok {
-				f, _ := m[productName]
-				if utils.GetItemInArray(f, ruleL) == -1 {
-					f = append(f, ruleL)
-				}
-				m[productName] = f
-			} else {
-				m[productName] = []string{ruleL}
-			}
-		}
-	}
-
-	for productName, ruleLs := range m {
-		for _, ruleL := range ruleLs {
-			workflowstruct.Fingerprints = append(workflowstruct.Fingerprints, workflowstruct.FingerPEntity{ProductName: productName, Rule: ParseRule(ruleL), AllString: ruleL})
-		}
-	}
-
-}
-
-func ParseRule(rule string) []workflowstruct.RuleData {
-	var result []workflowstruct.RuleData
-	empty := workflowstruct.RuleData{}
-
-	for {
-		data := getRuleData(rule)
-		if data == empty {
-			break
-		}
-		result = append(result, data)
-		rule = rule[:data.Start] + "T" + rule[data.End:]
-	}
-	return result
-}
-
-func getRuleData(rule string) workflowstruct.RuleData {
-	if !strings.Contains(rule, "=\"") {
-		return workflowstruct.RuleData{}
-	}
-	pos := strings.Index(rule, "=\"")
-	op := 0
-	if rule[pos-1] == 33 {
-		op = 1
-	} else if rule[pos-1] == 61 {
-		op = 2
-	} else if rule[pos-1] == 62 {
-		op = 3
-	} else if rule[pos-1] == 60 {
-		op = 4
-	} else if rule[pos-1] == 126 {
-		op = 5
-	}
-
-	start := 0
-	ti := 0
-	if op > 0 {
-		ti = 1
-	}
-	for i := pos - 1 - ti; i >= 0; i-- {
-		if (rule[i] > 122 || rule[i] < 97) && rule[i] != 95 {
-			start = i + 1
-			break
-		}
-
-	}
-	key := rule[start : pos-ti]
-
-	end := pos + 2
-	for i := pos + 2; i < len(rule)-1; i++ {
-		if rule[i] != 92 && rule[i+1] == 34 {
-			end = i + 2
-			break
-		}
-	}
-	value := rule[pos+2 : end-1]
-	all := rule[start:end]
-
-	return workflowstruct.RuleData{Start: start, End: end, Op: int16(op), Key: key, Value: value, All: all}
 }
 
 func Loadyaml() {
@@ -143,8 +57,8 @@ func Loadyaml() {
 		workflowstruct.Dirs[dir] = []string{"common"}
 	}
 	gologger.Info().Msgf("目录扫描数据正常，共: %d 条\n", len(workflowstruct.Dirs))
-	if len(workflowstruct.Fingerprints) == 0 {
+	if len(workflowstruct.FingerPrints) == 0 {
 		gologger.Fatal().Msg("请检查指纹数据库是否正常，是否正确放置config文件夹。")
 	}
-	gologger.Info().Msgf("YAML指纹数据: %d 条\n", len(workflowstruct.Fingerprints))
+	gologger.Info().Msgf("YAML指纹数据: %d 条\n", len(workflowstruct.FingerPrints))
 }

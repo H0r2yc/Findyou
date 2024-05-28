@@ -46,3 +46,23 @@ func RemoveDuplicateElement(input []string) []string {
 	}
 	return result
 }
+
+func FromKeywordGetDomain(keyword string) string {
+	if strings.Contains(keyword, "||") {
+		firstkeyword := strings.Split(keyword, "||")[0]
+		firstkeyword = strings.ReplaceAll(firstkeyword, "(", "")
+		firstkeyword = strings.ReplaceAll(firstkeyword, ")", "")
+		if strings.Contains(firstkeyword, "&&") {
+			keyword = strings.Split(strings.Split(firstkeyword, "&&")[0], "=")[1]
+		} else {
+			keyword = strings.Split(firstkeyword, "=")[1]
+		}
+	} else {
+		if strings.Contains(keyword, "&&") {
+			keyword = strings.Split(strings.Split(keyword, "&&")[0], "=")[1]
+		} else {
+			keyword = strings.Split(keyword, "=")[1]
+		}
+	}
+	return keyword
+}

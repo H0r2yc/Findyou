@@ -7,6 +7,7 @@ Processing（处理中）：表示正在处理的数据，处理过程尚未完�
 Completed（已完成）：表示处理完成的数据，已经完成了所需的操作。
 Failed（失败）：表示处理失败的数据，处理过程中出现了错误。
 Cancelled（已取消）：表示已经取消处理的数据，可能是由于某种原因中止了处理过程。
+FingerComplete
 Paused（已暂停）
 */
 
@@ -18,8 +19,9 @@ Paused（已暂停）
 //QUAKESEARCH
 //QUAKEDBSEARCH
 //DOMAINBRUTE
-//ALIVESCAN
+//ALIVEANDPASSIVITYSCAN
 //AQCQCCSCAN
+//FINGERPRINT
 
 type KeywordsList struct {
 	//keywords是为了第一次生成的时候用，后面db生成不再需要
@@ -52,29 +54,34 @@ type IPs struct {
 	Status    string
 }
 
-type Fingerprints struct {
+type HighLevelTargets struct {
 	ID        uint `gorm:"primaryKey"`
 	Url       string
+	Title     string
 	Finger    string
-	vuln      string
+	Priority  uint
+	tags      string
+	Vuln      string
 	CompanyID uint
-	Status    string
 }
 
 type Targets struct {
-	ID        uint `gorm:"primaryKey"`
-	Target    string
-	Title     string
-	CompanyID uint
-	TaskID    uint
-	Status    string
+	ID          uint `gorm:"primaryKey"`
+	Target      string
+	Title       string
+	FingerPrint string
+	Priority    uint
+	CompanyID   uint
+	TaskID      uint
+	Status      string
 }
 
-type URLs struct {
-	ID        uint `gorm:"primaryKey"`
-	Url       string
-	CompanyID uint
-	Status    string
+type SensitiveInfo struct {
+	ID          uint `gorm:"primaryKey"`
+	Url         string
+	PhoneNum    string
+	Supplychain string
+	ICP         string
 }
 
 type Keywords struct {
@@ -95,4 +102,5 @@ type Tasks struct {
 	Count     uint
 	CompanyID uint
 	Status    string
+	Note      string
 }

@@ -28,3 +28,19 @@ func WriteToDomains(db *gorm.DB, Domains Domains) error {
 	}
 	return nil
 }
+
+func WriteToHighLevelTargets(db *gorm.DB, HighLevelTargets HighLevelTargets) error {
+	if err := db.Create(&HighLevelTargets).Error; err != nil {
+		gologger.Error().Msg(err.Error())
+		return err
+	}
+	return nil
+}
+
+func WriteToSensitiveInfo(db *gorm.DB, SensitiveInfo SensitiveInfo) error {
+	if err := db.Create(&SensitiveInfo).Error; err != nil {
+		gologger.Error().Msg(err.Error())
+		return err
+	}
+	return nil
+}

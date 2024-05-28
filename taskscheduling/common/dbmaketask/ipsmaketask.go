@@ -54,7 +54,7 @@ func IPsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targe
 				return err
 			}
 		} else {
-			splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword)
+			splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword+1)
 			for i := 0; i < len(splitslice); i++ {
 				err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
 				if err != nil {

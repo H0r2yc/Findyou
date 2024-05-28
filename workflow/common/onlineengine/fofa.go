@@ -29,6 +29,7 @@ type FOFAResponseJson struct {
 
 func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 	status := true
+	var companyid int
 	if len(datalist) == 0 {
 		gologger.Info().Msg("获取到的FOFASEARCH任务为空，退出")
 	}
@@ -45,15 +46,27 @@ func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 			}
 		}
 		result := SearchFOFACore(keywords[0], appconfig.API.Fofa.Key, 9000, appconfig.CDNConfig.CDNBruteForceThreads)
+		//如果是99那么就添加备注信息
+		if result.SearchStatus == 99 {
+			err = mysqldb.ProcessTasks(dbtask, "Completed")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			err = mysqldb.ProcessTasksNote(dbtask, "疑似CDN")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+		}
 		//如果不成功，那么将禁用当前workflow的此功能模块
-		if result.SearchStatus != 1 {
+		if result.SearchStatus != 1 && result.SearchStatus != 99 {
 			gologger.Info().Msg("状态异常，10秒后重试中...")
 			time.Sleep(10 * time.Second)
 			result = SearchFOFACore(keywords[0], appconfig.API.Fofa.Key, 9000, appconfig.CDNConfig.CDNBruteForceThreads)
-			if result.SearchStatus != 1 {
+			if result.SearchStatus != 1 && result.SearchStatus != 99 {
 				gologger.Info().Msg("状态异常，10秒后重试中...")
+				time.Sleep(10 * time.Second)
 				result = SearchFOFACore(keywords[0], appconfig.API.Fofa.Key, 9000, appconfig.CDNConfig.CDNBruteForceThreads)
-				if result.SearchStatus != 1 {
+				if result.SearchStatus != 1 && result.SearchStatus != 99 {
 					gologger.Error().Msg("出错了，可能没有余额或者key错误，即将禁用workflow当前fofa搜索模块")
 					status = false
 					appconfig.Module.Fofasearch = false
@@ -61,9 +74,14 @@ func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 				}
 			}
 		}
-		companyid, err := strconv.Atoi(keywords[1])
-		if err != nil {
-			companyid = 999
+		if len(keywords) > 1 {
+			companyid, err = strconv.Atoi(keywords[1])
+			if err != nil {
+				companyid = 0
+			}
+		} else {
+			gologger.Error().Msgf("找不到读取的companyid值，读取的内容为%s", data)
+			companyid = 0
 		}
 		err = mysqldb.TargetsToDB(result.Targets, uint(companyid), dbtask.ID)
 		if err != nil {
@@ -169,6 +187,12 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	}
 	targets.SearchStatus = 1
 	targets.SearchCount = uint(len(responseJson.Results))
+	//如果是通过从db取出的domain然后查出的结果大于4000条，大概率是cdn等网站，标记为cdn
+	if strings.Contains(keyword, "(") && len(responseJson.Results) > 4000 {
+		//99 代表可疑的搜索语句，可能不是目标单位，如果确定的话加入到target的yaml中
+		targets.SearchStatus = 99
+		return targets
+	}
 	gologger.Info().Msgf("[Fofa] [%s] 已查询: %d/%d", keyword, len(responseJson.Results), responseJson.Size)
 	// 做一个域名缓存，避免重复dns请求
 	var Domains []string

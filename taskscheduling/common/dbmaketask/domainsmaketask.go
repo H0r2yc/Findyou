@@ -46,6 +46,13 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
+		//如果fofakeywords和keywordtasks长度不一样，说明有部分fofakeyword之前写入过，所以要重新生成一个keyword
+		if len(keywordtasks) != len(fofakeywords) {
+			fofakeywords = []string{}
+			for _, keywordtask := range keywordtasks {
+				fofakeywords = append(fofakeywords, keywordtask.Task+"Findyou"+strconv.Itoa(int(keywordtask.CompanyID)))
+			}
+		}
 		//处理keywords
 		if len(keywordtasks) != 0 {
 			//写入处理过的纯keywords到keywords表
@@ -61,7 +68,7 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 					return err
 				}
 			} else {
-				splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword)
+				splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword+1)
 				for i := 0; i < len(splitslice); i++ {
 					err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
 					if err != nil {
@@ -93,7 +100,7 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 				return err
 			}
 		} else {
-			splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword)
+			splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword+1)
 			for i := 0; i < len(splitslice); i++ {
 				err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
 				if err != nil {

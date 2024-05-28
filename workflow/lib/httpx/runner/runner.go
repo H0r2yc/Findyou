@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/md5"
 	"encoding/csv"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -478,7 +480,9 @@ func (r *Runner) testAndSet(k string) bool {
 	if k == "" {
 		return false
 	}
-
+	if strings.Contains(k, "*") {
+		return false
+	}
 	if r.seen(k) {
 		return false
 	}
@@ -690,7 +694,7 @@ func (r *Runner) RunEnumeration() {
 		defer wgoutput.Done()
 
 		defer func() {
-			for _, nextStep := range nextSteps {
+			for _, nextStep = range nextSteps {
 				close(nextStep)
 			}
 		}()
@@ -1196,6 +1200,7 @@ func (r *Runner) process(t string, wg *sizedwaitgroup.SizedWaitGroup, hp *httpx.
 						defer wg.Done()
 						result := r.analyze(hp, protocol, target, method, t, scanopts)
 						output <- result
+						//这一块将AN目标加到扫描任务中了
 						if scanopts.TLSProbe && result.TLSData != nil {
 							for _, tt := range result.TLSData.SubjectAN {
 								if !r.testAndSet(tt) {
@@ -1815,10 +1820,10 @@ retry:
 		builder.WriteRune(']')
 	}
 
-	var faviconMMH3, faviconPath string
+	var faviconMMH3, faviconPath, faviconMD5 string
 	if scanopts.Favicon {
 		var err error
-		faviconMMH3, faviconPath, err = r.handleFaviconHash(hp, req, resp)
+		faviconMMH3, faviconPath, faviconMD5, err = r.handleFaviconHash(hp, req, resp)
 		if err == nil {
 			builder.WriteString(" [")
 			if !scanopts.OutputWithNoColor {
@@ -2046,6 +2051,7 @@ retry:
 		Technologies:       technologies,
 		FinalURL:           finalURL,
 		FavIconMMH3:        faviconMMH3,
+		IConHash_MD5:       faviconMD5,
 		FaviconPath:        faviconPath,
 		Hashes:             hashesMap,
 		Extracts:           extractResult,
@@ -2097,11 +2103,18 @@ func calculatePerceptionHash(screenshotBytes []byte) (uint64, error) {
 	return pHash.GetHash(), nil
 }
 
-func (r *Runner) handleFaviconHash(hp *httpx.HTTPX, req *retryablehttp.Request, currentResp *httpx.Response) (string, string, error) {
+func (r *Runner) handleFaviconHash(hp *httpx.HTTPX, req *retryablehttp.Request, currentResp *httpx.Response) (string, string, string, error) {
+	var iconhash_md5 string
 	// Check if current URI is ending with .ico => use current body without additional requests
 	if path.Ext(req.URL.Path) == ".ico" {
 		hash, err := r.calculateFaviconHashWithRaw(currentResp.Data)
-		return hash, req.URL.Path, err
+		if hash != "" {
+			hasher := md5.New()
+			hasher.Write(currentResp.RawData)
+			md5hash := hasher.Sum(nil)
+			iconhash_md5 = hex.EncodeToString(md5hash)
+		}
+		return hash, req.URL.Path, iconhash_md5, err
 	}
 
 	// search in the response of the requested path for element and rel shortcut/mask/apple-touch icon
@@ -2109,7 +2122,7 @@ func (r *Runner) handleFaviconHash(hp *httpx.HTTPX, req *retryablehttp.Request, 
 	// if not, any of link from other icons can be requested
 	potentialURLs, err := extractPotentialFavIconsURLs(req, currentResp)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	faviconPath := "/favicon.ico"
@@ -2117,7 +2130,7 @@ func (r *Runner) handleFaviconHash(hp *httpx.HTTPX, req *retryablehttp.Request, 
 	if len(potentialURLs) > 0 {
 		URL, err := r.parseURL(potentialURLs[0])
 		if err != nil {
-			return "", "", err
+			return "", "", "", err
 		}
 		if URL.IsAbs() {
 			req.SetURL(URL)
@@ -2130,15 +2143,21 @@ func (r *Runner) handleFaviconHash(hp *httpx.HTTPX, req *retryablehttp.Request, 
 	if faviconPath != "" {
 		err = req.URL.MergePath(faviconPath, false)
 		if err != nil {
-			return "", "", errorutil.NewWithTag("favicon", "failed to add %v to url got %v", faviconPath, err)
+			return "", "", "", errorutil.NewWithTag("favicon", "failed to add %v to url got %v", faviconPath, err)
 		}
 	}
 	resp, err := hp.Do(req, httpx.UnsafeOptions{})
 	if err != nil {
-		return "", "", errors.Wrap(err, "could not fetch favicon")
+		return "", "", "", errors.Wrap(err, "could not fetch favicon")
 	}
 	hash, err := r.calculateFaviconHashWithRaw(resp.Data)
-	return hash, req.URL.Path, err
+	if hash != "" {
+		hasher := md5.New()
+		hasher.Write(resp.RawData)
+		md5hash := hasher.Sum(nil)
+		iconhash_md5 = hex.EncodeToString(md5hash)
+	}
+	return hash, req.URL.Path, iconhash_md5, err
 }
 
 func (r *Runner) calculateFaviconHashWithRaw(data []byte) (string, error) {

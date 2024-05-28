@@ -25,7 +25,6 @@ func main() {
 		//Done 改成获取tasks表中的状态，这样就不用多个表的判断了
 		Status, count := mysqldb.CheckAllTasksStatus("Completed")
 		if !Status {
-			gologger.Info().Msgf("当前共 [%d] 任务未完成", count)
 			//检查tasks表的失败和取消的任务并重新生成task
 			err := dbmaketask.Taskmaketask("Failed")
 			if err != nil {
@@ -47,25 +46,34 @@ func main() {
 				gologger.Error().Msg(err.Error())
 			}
 			//检查targets表并生成存活探测任务
-			err = dbmaketask.TargetsMakeAliveScanTasks(appconfig, "Waiting")
+			err = dbmaketask.TargetsMakeTasks("Waiting", "ALIVEANDPASSIVITYSCAN", "WaitAliveScan", appconfig.Splittodb.Workflow)
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
 			//检查targets表并生成目录列表和指纹识别任务
+			//err = dbmaketask.TargetsMakeTasks("存活", "FINGERPRINT", "WaitFinger", appconfig.Splittodb.Fingers)
+			//if err != nil {
+			//	gologger.Error().Msg(err.Error())
+			//}
 			//探测是否redis为空，如果为空那么就重新提交Pending任务和target的waitscan任务
 			if redisdb.RedisIsNull() {
 				gologger.Info().Msg("redis为空且有任务未完成，等待1分钟重新提交任务")
 				time.Sleep(60 * time.Second)
-				err := dbmaketask.Taskmaketask("Pending")
-				if err != nil {
-					gologger.Error().Msg(err.Error())
-				}
-				//检查targets表并生成存活探测任务
-				err = dbmaketask.TargetsMakeAliveScanTasks(appconfig, "WaitScan")
-				if err != nil {
-					gologger.Error().Msg(err.Error())
+				//在获取一次是否有新增的数据，如果没有的话就继续，有bug
+				Status, _ = mysqldb.CheckAllTasksStatus("Completed")
+				if !Status {
+					err := dbmaketask.Taskmaketask("Pending")
+					if err != nil {
+						gologger.Error().Msg(err.Error())
+					}
+					//检查targets表并生成存活探测任务
+					err = dbmaketask.TargetsMakeTasks("WaitAliveScan", "ALIVEANDPASSIVITYSCAN", "WaitAliveScan", appconfig.Splittodb.Workflow)
+					if err != nil {
+						gologger.Error().Msg(err.Error())
+					}
 				}
 			}
+			gologger.Info().Msgf("当前共 [%d] 任务未完成", count)
 			time.Sleep(30 * time.Second)
 			continue
 		}
@@ -75,7 +83,14 @@ func main() {
 		gologger.Info().Msg("Workflow状态未结束或任务列表有未完成的任务")
 		time.Sleep(30 * time.Second)
 	}
-	gologger.Info().Msg("所有任务结束,调度模块即将停止")
+	gologger.Info().Msg("所有任务结束,调度模块即将停止\n可能为cdn的域名，如有误报请手动添加到yaml文件中")
+	cdntask, err := mysqldb.GetAllCDNTask()
+	if err != nil {
+		gologger.Error().Msg(err.Error())
+	}
+	for _, task := range cdntask {
+		gologger.Info().Msg(utils.FromKeywordGetDomain(task.Task))
+	}
 	time.Sleep(10 * time.Second)
 }
 

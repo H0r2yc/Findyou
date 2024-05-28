@@ -1,7 +1,6 @@
 package cdn
 
 import (
-	"Findyou.WorkFlow/common/output"
 	"Findyou.WorkFlow/common/utils"
 	"Findyou.WorkFlow/common/workflowstruct"
 	"github.com/miekg/dns"
@@ -126,18 +125,6 @@ func CheckCDNs(domains []string, threads int) (rCDNDomains []string, normalDomai
 			}
 
 			if result.IsCDN {
-				// gologger.Silent().Msgf("[CDN-Domain] %v [%v]", result.Domain, result.CDNName)
-				output.FormatOutput(output.OutputMessage{
-					Type:          "CDN-Domain",
-					IP:            "",
-					IPs:           nil,
-					Port:          "",
-					Protocol:      "",
-					Web:           output.WebInfo{},
-					Finger:        nil,
-					Domain:        result.Domain,
-					AdditionalMsg: result.CDNName,
-				})
 				rCDNDomainsLock.Lock()
 				rCDNDomains = append(rCDNDomains, result.Domain)
 				rCDNDomainsLock.Unlock()
@@ -183,18 +170,6 @@ func CheckCDNs(domains []string, threads int) (rCDNDomains []string, normalDomai
 							workflowstruct.GlobalIPDomainMapLock.Unlock()
 						}
 					}
-
-					output.FormatOutput(output.OutputMessage{
-						Type:          "RealIP",
-						IP:            "",
-						IPs:           ips,
-						Port:          "",
-						Protocol:      "",
-						Web:           output.WebInfo{},
-						Finger:        nil,
-						Domain:        result.Domain,
-						AdditionalMsg: "",
-					})
 
 				}
 

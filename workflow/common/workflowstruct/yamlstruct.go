@@ -16,15 +16,15 @@ type Appconfig struct {
 }
 
 type Module struct {
-	Fofasearch   bool `yaml:"fofasearch"`
-	Huntersearch bool `yaml:"huntersearch"`
-	Quakesearch  bool `yaml:"quakesearch"`
-	Cdncheck     bool `yaml:"cdncheck"`
-	Domainbrute  bool `yaml:"domainbrute"`
-	Alivescan    bool `yaml:"alivescan"`
-	Dirbrute     bool `yaml:"dirbrute"`
-	Fingerprint  bool `yaml:"fingerprint"`
-	Pocscan      bool `yaml:"pocscan"`
+	Fofasearch            bool `yaml:"fofasearch"`
+	Huntersearch          bool `yaml:"huntersearch"`
+	Quakesearch           bool `yaml:"quakesearch"`
+	Cdncheck              bool `yaml:"cdncheck"`
+	Domainbrute           bool `yaml:"domainbrute"`
+	AliveAndPassivityScan bool `yaml:"aliveandpassivityscan"`
+	Dirbrute              bool `yaml:"dirbrute"`
+	Fingerprint           bool `yaml:"fingerprint"`
+	Pocscan               bool `yaml:"pocscan"`
 }
 
 type OnlineAPI struct {

@@ -1,0 +1,6 @@
+
+2024/05/26 10:19:22 [32mC:/Users/Administrator/Documents/NetSarang Computer/7/Findyou/taskscheduling/common/db/mysqldb/dbcreate.go:48 [33mSLOW SQL >= 200ms
+[0m[31;1m[351.151ms] [33m[rows:0][35m CREATE TABLE `companies` (`id` bigint unsigned AUTO_INCREMENT,`name` longtext,PRIMARY KEY (`id`))[0m
+
+2024/05/26 10:35:03 [32mC:/Users/Administrator/Documents/NetSarang Computer/7/Findyou/taskscheduling/common/db/mysqldb/dbcreate.go:48 [33mSLOW SQL >= 200ms
+[0m[31;1m[222.056ms] [33m[rows:0][35m CREATE TABLE `companies` (`id` bigint unsigned AUTO_INCREMENT,`name` longtext,PRIMARY KEY (`id`))[0m

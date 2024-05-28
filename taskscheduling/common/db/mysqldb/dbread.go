@@ -96,3 +96,20 @@ func GetAllTasks(status string, equalto bool) ([]Tasks, error) {
 	}
 	return TaskList, nil
 }
+
+// GetAllCDNTask 从数据库中取出所有特定条件的数据
+func GetAllCDNTask() ([]Tasks, error) {
+	var TaskList []Tasks
+	var result *gorm.DB
+	database := GetDB()
+	defer CloseDB(database)
+	if database == nil {
+		gologger.Error().Msg("Failed to get database connection")
+	}
+	// 查询整个表
+	result = database.Where("Note = ?", "疑似CDN").Find(&TaskList)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return TaskList, nil
+}

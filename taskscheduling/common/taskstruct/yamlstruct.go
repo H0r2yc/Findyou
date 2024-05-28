@@ -19,6 +19,7 @@ type Splittodb struct {
 	Hunterkeyword int `yaml:"hunterkeyword"`
 	Quakekeyword  int `yaml:"quakekeyword"`
 	Workflow      int `yaml:"targets"`
+	Fingers       int `yaml:"fingers"`
 }
 
 type OtherSet struct {
@@ -49,10 +50,9 @@ type Target struct {
 }
 
 type customizesyntax struct {
-	Fofa    []string `yaml:"fofa"`
-	Hunter  []string `yaml:"hunter"`
-	Quake   []string `yaml:"quake"`
-	DirPath []string `yaml:"自定义目录"`
+	Fofa   []string `yaml:"fofa"`
+	Hunter []string `yaml:"hunter"`
+	Quake  []string `yaml:"quake"`
 }
 
 type OnlineAPI struct {

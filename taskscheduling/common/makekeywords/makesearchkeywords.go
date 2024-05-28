@@ -49,21 +49,32 @@ func DBFOFAMakeKeyword(targetconfig *taskstruct.Targetconfig, data, datatype str
 		for _, globalkeyword := range targetconfig.Target.Gobal_keywords {
 			//Todo 如果是归属地相同或者重点ip表中，那么就直接/24
 			if globalkeyword != "" {
-				searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data, globalkeyword))
-			} else {
-				//TODO 根据cert或者iconhash等等做匹配
-				searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
+				if strings.Contains(globalkeyword, "&&") {
+					var andword string
+					words := strings.Split(globalkeyword, "&&")
+					for _, word := range words {
+						andword += fmt.Sprintf("&& title=\"%s\" ", word)
+					}
+					searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" %s&& country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data, andword))
+				} else {
+					searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data, globalkeyword))
+				}
 			}
+			//TODO 根据cert或者iconhash等等做匹配
+			//不能用系统，垃圾数据太多了
+			//searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
 		}
 		return "(" + strings.Join(searchlist, ") || (") + ")Findyou" + strconv.Itoa(int(companyid))
 	} else if datatype == "Domains" {
 		searchlist = append(searchlist, fmt.Sprintf("domain=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
 		searchlist = append(searchlist, fmt.Sprintf("cert=\"%s\" && domain!=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data, data))
 		return "(" + strings.Join(searchlist, ") || (") + ")Findyou" + strconv.Itoa(int(companyid))
+	} else {
+		return ""
 	}
-	return ""
 }
 
+// 生成的keyword要把搜索的结果不要重合，不然的话会出现同时写入数据库过程中重复target但是不同taskid
 func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	var searchlist []string
 	var keyword string
@@ -75,7 +86,7 @@ func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 		if name != "" {
 			keyword = fmt.Sprintf("cert=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", name, taskstruct.CompanyID[name])
 			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("title=\"%s\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", name, taskstruct.CompanyID[name])
+			keyword = fmt.Sprintf("title=\"%s\" && title=\"系统\" && cert!=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", name, name, taskstruct.CompanyID[name])
 			searchlist = append(searchlist, keyword)
 		}
 	}
@@ -95,7 +106,7 @@ func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 			searchlist = append(searchlist, keyword)
 			keyword = fmt.Sprintf("host=\"%s\" && domain!=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("cert=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("cert=\"%s\" && domain!=\"%s\" && host!=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], data[0], data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 		}
 	}

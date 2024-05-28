@@ -34,3 +34,4 @@ splittodb:
   quakekeyword: 100
   #根据workflow个数
   targets: 500
+  fingers: 100

@@ -45,7 +45,7 @@ func checkDatabaseAndTables(db *gorm.DB) error {
 	db.Exec("USE Findyou")
 
 	// 检查表格是否存在，如果不存在则执行迁移
-	if err := db.AutoMigrate(&Company{}, &Domains{}, &IPs{}, &Fingerprints{}, &Targets{}, &URLs{}, &Keywords{}, &Workflows{}, &Tasks{}); err != nil {
+	if err := db.AutoMigrate(&Company{}, &Domains{}, &IPs{}, &HighLevelTargets{}, &Targets{}, &SensitiveInfo{}, &Keywords{}, &Workflows{}, &Tasks{}); err != nil {
 		return fmt.Errorf("failed to migrate tables: %w", err)
 	}
 

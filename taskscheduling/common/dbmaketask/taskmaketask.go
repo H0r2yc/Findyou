@@ -29,7 +29,7 @@ func Taskmaketask(status string) error {
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
-		case "ALIVESCAN":
+		case "ALIVEANDPASSIVITYSCAN":
 			err = redisdb.WriteDataToRedis(rediscon, task.TaskName, []string{task.Task})
 			if err != nil {
 				gologger.Error().Msg(err.Error())

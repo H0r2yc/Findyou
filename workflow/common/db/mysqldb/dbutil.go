@@ -6,7 +6,10 @@ import (
 	"github.com/projectdiscovery/gologger"
 	"golang.org/x/net/publicsuffix"
 	"gorm.io/gorm"
+	"sync"
 )
+
+var mysqllock sync.Mutex
 
 func TargetsToDB(TargetList []string, companyid, taskid uint) error {
 	if len(TargetList) == 0 {
@@ -134,12 +137,12 @@ func CheckDuplicateRecord(database *gorm.DB, tableName string, columnName string
 		existingRecord = &Domains{}
 	case "IPs":
 		existingRecord = &IPs{}
-	case "Fingerprints":
-		existingRecord = &Fingerprints{}
+	case "HighLevelTargets":
+		existingRecord = &HighLevelTargets{}
 	case "Targets":
 		existingRecord = &Targets{}
-	case "URLs":
-		existingRecord = &URLs{}
+	case "SensitiveInfo":
+		existingRecord = &SensitiveInfo{}
 	case "Keywords":
 		existingRecord = &Keywords{}
 	case "Workflows":
@@ -172,4 +175,35 @@ func GetNextTargetID(db *gorm.DB, table string) (uint, error) {
 	// 下一个可用的 target ID 是最大的 target ID 加一
 	nextID := maxID + 1
 	return nextID, nil
+}
+
+func SensitiveInfoToDB(Url, PhoneNum, Supplychain, ICP string) error {
+	database := GetDB()
+	if database == nil {
+		gologger.Error().Msg("获取数据库连接失败")
+	}
+	mysqllock.Lock()
+	defer mysqllock.Unlock()
+	SensitiveInfostruct := SensitiveInfo{
+		Url:         Url,
+		PhoneNum:    PhoneNum,
+		Supplychain: Supplychain,
+		ICP:         ICP,
+	}
+	err := WriteToSensitiveInfo(database, SensitiveInfostruct)
+	if err != nil {
+		gologger.Error().Msg(err.Error())
+	}
+	return err
+}
+
+func HighLevelTargetsToDB(highlevellist []HighLevelTargets) error {
+	database := GetDB()
+	for _, highleveltarget := range highlevellist {
+		err := WriteToHighLevelTargets(database, highleveltarget)
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
+	}
+	return nil
 }

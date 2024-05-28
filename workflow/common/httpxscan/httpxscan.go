@@ -2,6 +2,7 @@ package httpxscan
 
 import (
 	"Findyou.WorkFlow/common/db/mysqldb"
+	"Findyou.WorkFlow/common/fingerprint"
 	"Findyou.WorkFlow/common/workflowstruct"
 	"bytes"
 	"github.com/projectdiscovery/gologger"
@@ -14,7 +15,7 @@ import (
 )
 
 func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
-	gologger.Info().Msgf("获取到ALIVESCAN任务数量 [%d] 个", len(targets))
+	gologger.Info().Msgf("获取到ALIVEANDPASSIVITYSCAN任务数量 [%d] 个", len(targets))
 	taskstruct, err := mysqldb.GetTasks(strings.Join(targets, ","))
 	if err != nil {
 		gologger.Error().Msg(err.Error())
@@ -23,12 +24,16 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}
+	//设置可能存在漏洞的url列表
+	var highlevellist []mysqldb.HighLevelTargets
 	//禁用标准输入DisableStdin，导致程序一直卡死
+	//ResponseInStdout是返回body和header的
 	options := runner.Options{
 		Methods:                   "GET",
 		InputTargetHost:           targets,
 		Favicon:                   true,
 		Hashes:                    "md5",
+		ResponseInStdout:          true,
 		OutputServerHeader:        true,
 		TLSProbe:                  true,
 		FollowHostRedirects:       true,
@@ -71,13 +76,18 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 					}
 				}
 				// 如果失败，设置状态为失败
-				err = mysqldb.ProcessTargets(target, resp.Title, "失败")
+				err = mysqldb.ProcessTargets(target, resp.Title, "失败", "", 0)
 				if err != nil {
 					gologger.Error().Msgf("Failed to process target: %s,inputurl: %s", err.Error(), resp.Input)
 				}
 				return
 			}
-			gologger.Info().Msgf("[HTTPX] [%d] %s [%s]\n", resp.StatusCode, resp.URL, resp.Title)
+			//检测敏感信息
+			bodydata := fingerprint.FindInBody(resp.ResponseBody)
+			if bodydata.ICP != "" || bodydata.Supplychain != "" || bodydata.PhoneNum != "" {
+				err = mysqldb.SensitiveInfoToDB(resp.URL, bodydata.PhoneNum, bodydata.Supplychain, bodydata.ICP)
+				gologger.Info().Msgf("[INFOFIND] %s [%s] [%s] [%s]\n", resp.URL, bodydata.ICP, bodydata.PhoneNum, bodydata.Supplychain)
+			}
 			//查找target
 			target, err := mysqldb.GetTargetID(resp.URL)
 			if err != nil {
@@ -90,10 +100,27 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 					gologger.Error().Msg(err.Error())
 				}
 			}
-			if resp.StatusCode >= 200 && resp.StatusCode < 500 {
-				err = mysqldb.ProcessTargets(target, resp.Title, "存活")
+			//被动检测指纹
+			finger, priority, matched := fingerprint.Fingerprint(resp)
+			if matched {
+				gologger.Info().Msgf("[Finger] %s [%s] 等级：%d\n", resp.URL, finger, priority)
+				if priority > 1 {
+					highleveltarget := mysqldb.HighLevelTargets{
+						Url:       resp.URL,
+						Title:     resp.Title,
+						Finger:    finger,
+						Priority:  uint(priority),
+						CompanyID: 0,
+					}
+					highlevellist = append(highlevellist, highleveltarget)
+				}
 			} else {
-				err = mysqldb.ProcessTargets(target, resp.Title, "非正常状态码")
+				gologger.Info().Msgf("[HTTPX] [%d] %s [%s]\n", resp.StatusCode, resp.URL, resp.Title)
+			}
+			if resp.StatusCode >= 200 && resp.StatusCode < 500 {
+				err = mysqldb.ProcessTargets(target, resp.Title, "存活", finger, priority)
+			} else {
+				err = mysqldb.ProcessTargets(target, resp.Title, "非正常状态码", finger, priority)
 			}
 			if err != nil {
 				gologger.Error().Msgf("Failed to process target: %s,inputurl: %s", err.Error(), resp.Input)
@@ -115,6 +142,12 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 	err = mysqldb.ProcessTasks(taskstruct, "Completed")
 	if err != nil {
 		gologger.Error().Msg(err.Error())
+	}
+	if len(highlevellist) != 0 {
+		err = mysqldb.HighLevelTargetsToDB(highlevellist)
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
 	}
 	gologger.AuditTimeLogger("响应探测结束")
 }

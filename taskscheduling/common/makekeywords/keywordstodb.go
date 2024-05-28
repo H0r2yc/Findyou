@@ -7,6 +7,7 @@ import (
 	"Findyou.TaskScheduling/common/utils"
 	"fmt"
 	"github.com/projectdiscovery/gologger"
+	"strconv"
 )
 
 func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targetconfig) {
@@ -25,6 +26,13 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 		}
 		//判断task是否为空，为空说明之前已经加载过配置文件内容到task，就不要执行写入到keywords表以及redis中了
 		if tasks != nil {
+			//判断是否有新增的资产，如果有就重新赋值FofaKeyWord，避免重复提交任务
+			if len(tasks) != len(KeyWords.FofaKeyWords) {
+				KeyWords.FofaKeyWords = []string{}
+				for _, task := range tasks {
+					KeyWords.FofaKeyWords = append(KeyWords.FofaKeyWords, task.Task+"Findyou"+strconv.Itoa(int(task.CompanyID)))
+				}
+			}
 			//写入处理过的纯keywords到keywords表
 			keywords := utils.TaskDataToKeywordData(KeyWords.FofaKeyWords)
 			err = mysqldb.WriteDataToKeywords(keywords)
@@ -37,7 +45,7 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 				splitslice = utils.SplitSlice(KeyWords.FofaKeyWords, 2)
 			} else {
 				//appconfig.Splittodb.Fofakeyword根据最多数量来确定，目的是为了在出现问题的时候能在一定限度内控制将失败的task设置failed的状态，太多会造成后面资源的浪费
-				splitslice = utils.SplitSlice(KeyWords.FofaKeyWords, len(KeyWords.FofaKeyWords)/appconfig.Splittodb.Fofakeyword)
+				splitslice = utils.SplitSlice(KeyWords.FofaKeyWords, len(KeyWords.FofaKeyWords)/appconfig.Splittodb.Fofakeyword+1)
 			}
 			for i := 0; i < len(splitslice); i++ {
 				exists, err := redisdb.IsDataInSet(rediscon, "FOFASEARCH", splitslice[i])

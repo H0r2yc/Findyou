@@ -6,7 +6,8 @@ import "github.com/projectdiscovery/gologger"
 func GetTasks(task string) (Tasks, error) {
 	var tasks Tasks
 	database := GetDB()
-	defer CloseDB(database)
+	mysqllock.Lock()
+	defer mysqllock.Unlock()
 	if database == nil {
 		gologger.Error().Msg("Failed to get database connection")
 	}
@@ -18,22 +19,11 @@ func GetTasks(task string) (Tasks, error) {
 	return tasks, nil
 }
 
-// GetAllTargets 从数据库中取出所有 Status 为 0 的数据
-func GetAllTargets(status uint) ([]Targets, error) {
-	db := GetDB()
-	defer CloseDB(db)
-	var targets []Targets
-	result := db.Where("Status = ?", status).Find(&targets)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return targets, nil
-}
-
-// GetTargetID 从数据库中取出所有 Status 为 0 的数据
+// GetTargetID 从数据库中取出特定target，因为在httpx多线程中，所以要添加一个锁
 func GetTargetID(Target string) (*Targets, error) {
 	db := GetDB()
-	defer CloseDB(db)
+	mysqllock.Lock()
+	defer mysqllock.Unlock()
 	var targets *Targets
 	result := db.Where("Target = ?", Target).Find(&targets)
 	if result.Error != nil {

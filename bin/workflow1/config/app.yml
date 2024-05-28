@@ -4,7 +4,7 @@ module:
   quakesearch: false
   cdncheck: true
   domainbrute: false
-  alivescan: true
+  aliveandpassivityscan: true
   dirbrute: true
   fingerprint: true
   pocscan: true
