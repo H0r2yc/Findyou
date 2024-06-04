@@ -52,7 +52,8 @@ func getTitleWithDom(r *Response) (*html.Node, error) {
 			crawler(child)
 		}
 	}
-	htmlDoc, err := html.Parse(bytes.NewReader(r.Data))
+	//魔改 修改了r.Raw，可以获取一些
+	htmlDoc, err := html.Parse(bytes.NewReader([]byte(r.Raw)))
 	if err != nil {
 		return nil, err
 	}

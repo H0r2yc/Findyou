@@ -9,7 +9,7 @@ import (
 // 定义一个测试函数，用于测试某个方法
 func TestHttpxscan(t *testing.T) {
 	loadyaml.Loadyaml()
-	targetlist := []string{"https://58.247.11.181:8089", "https://106.55.77.56", "https://58.247.11.181:8089"}
+	targetlist := []string{"100.me", "https://abdemo.cmbi.site", "https://aquarius.cmbi.site"}
 	appconfig := workflowstruct.Appconfig{
 		Httpxconfig: workflowstruct.Httpx{
 			WebTimeout: 5,

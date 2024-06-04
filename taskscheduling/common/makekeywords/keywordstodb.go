@@ -73,4 +73,13 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 		//xxxx
 	}
 	gologger.Info().Msg("从配置文件生成任务成功")
+	//domain以及ip入target库
+	err := mysqldb.YamlToDBTargets(targetconfig.Target.Domain)
+	if err != nil {
+		gologger.Error().Msg(err.Error())
+	}
+	err = mysqldb.YamlToDBTargets(targetconfig.Target.IP)
+	if err != nil {
+		gologger.Error().Msg(err.Error())
+	}
 }

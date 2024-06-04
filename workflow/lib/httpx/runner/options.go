@@ -37,6 +37,7 @@ const (
 )
 
 var PDCPApiKey = ""
+var GobalACNList []string
 
 // OnResultCallback (hostResult)
 type OnResultCallback func(Result)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/projectdiscovery/gologger"
 	"gorm.io/gorm"
+	"strings"
 )
 
 // GetNextID 传入的table值为格式化后的表名
@@ -162,4 +163,33 @@ func YamlCompanyToDB(targetconfig *taskstruct.Targetconfig) {
 		}
 		taskstruct.CompanyID[target] = id
 	}
+}
+
+func YamlToDBTargets(datas []string) error {
+	if len(datas) == 0 {
+		return nil
+	}
+	database := GetDB()
+	if database == nil {
+		gologger.Error().Msg("获取数据库连接失败")
+	}
+	defer CloseDB(database)
+	for _, target := range datas {
+		data := strings.SplitN(target, ":", 2)
+		isexists, err := CheckDuplicateRecord(database, "Targets", "Target", data[0])
+		if isexists {
+			continue
+		}
+		targetdb := Targets{
+			Target:    target,
+			CompanyID: taskstruct.CompanyID[data[1]],
+			TaskID:    0,
+			Status:    "Waiting",
+		}
+		err = WriteToTargets(database, targetdb)
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
+	}
+	return nil
 }

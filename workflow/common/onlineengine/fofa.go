@@ -212,7 +212,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 		if port == "0" {
 			continue
 		}
-		if protocol == "tls" {
+		if protocol != "https" && protocol != "http" {
 			protocol = "https"
 		}
 		//这儿赋值为""的目的是domain是根域名，不包含子域名，所有要后面处理后成为子域名
@@ -229,27 +229,37 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 					continue
 				}
 			}
-			//这里添加的域名host直接到target只是一个端口，实际可能存在其他端口
-			if strings.Contains(host, "://") {
-				targets.Targets = append(targets.Targets, host)
-			} else {
-				targets.Targets = append(targets.Targets, protocol+"://"+host)
-			}
 			realHost := strings.ReplaceAll(host, protocol+"://", "")
 			domain = strings.ReplaceAll(realHost, ":"+port, "")
 			//添加domainIP的映射关系，并添加到待检测cdn的Domains中
 			DomainIPMap[domain] = ip
 			Domains = append(Domains, domain)
-		} else {
-			if strings.Contains(host, "://") {
-				targets.Targets = append(targets.Targets, host)
-			} else {
-				targets.Targets = append(targets.Targets, protocol+"://"+host)
-			}
-			if !strings.Contains(keyword, "ip=") {
-				if !mysqldb.Isipclr(result[3]) {
-					ips = append(targets.IPs, result[3])
+			//如果不是常见端口，那么就加入一个url到target，如果是常规端口，那么直接加入域名到target，毕竟网络空间引擎并不能实时探测网站的状态，万一协议有变化
+			if port != "80" && port != "443" {
+				//这里添加的域名host直接到target只是一个端口，实际可能存在其他端口
+				if strings.Contains(host, "://") {
+					targets.Targets = append(targets.Targets, host)
+				} else {
+					targets.Targets = append(targets.Targets, protocol+"://"+host)
 				}
+			} else {
+				targets.Targets = append(targets.Targets, domain)
+			}
+		} else {
+			//这儿是ip添加到target的逻辑，和domain一样，如果不是常规端口就添加整个url,如果是常规端口就添加ip,毕竟网络空间引擎并不能实时探测网站的状态，万一协议有变化
+			if port != "80" && port != "443" {
+				if strings.Contains(host, "://") {
+					targets.Targets = append(targets.Targets, host)
+				} else {
+					targets.Targets = append(targets.Targets, protocol+"://"+host)
+				}
+				if !strings.Contains(keyword, "ip=") {
+					if !mysqldb.Isipclr(ip) {
+						ips = append(targets.IPs, ip)
+					}
+				}
+			} else {
+				targets.Targets = append(targets.Targets, ip)
 			}
 		}
 	}
@@ -276,6 +286,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 				targets.Domains = append(targets.Domains, d)
 				targets.IsCDN = append(targets.IsCDN, 0)
 				targets.DomainIps = append(targets.DomainIps, DomainIPMap[d])
+				targets.Targets = append(targets.Targets, DomainIPMap[d])
 			}
 		}
 	}

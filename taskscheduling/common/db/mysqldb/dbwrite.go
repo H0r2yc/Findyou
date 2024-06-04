@@ -164,3 +164,11 @@ func WriteDataToKeywords(keywords []string) error {
 	}
 	return nil
 }
+
+func WriteToTargets(db *gorm.DB, Targets Targets) error {
+	if err := db.Create(&Targets).Error; err != nil {
+		gologger.Error().Msg(err.Error())
+		return err
+	}
+	return nil
+}

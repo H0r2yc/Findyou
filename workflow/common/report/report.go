@@ -8,9 +8,7 @@ import (
 	"github.com/projectdiscovery/nuclei/v3/pkg/model/types/severity"
 	noutput "github.com/projectdiscovery/nuclei/v3/pkg/output"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 )
 
 func getSeverity(s severity.Severity) string {
@@ -45,14 +43,6 @@ func writeFile(result string, filename string) {
 }
 
 var ReportIndex = 1
-
-func GenerateHTMLReportHeader() {
-	if workflowstruct.GlobalConfig.ReportName == "" {
-		workflowstruct.GlobalConfig.ReportName = strconv.Itoa(int(time.Now().Unix())) + ".html"
-	}
-	showData := defaultHeader()
-	writeFile(showData, workflowstruct.GlobalConfig.ReportName)
-}
 
 func AddResultByResultEvent(result noutput.ResultEvent) {
 	if workflowstruct.GlobalConfig.ReportName == "" {

@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/net/publicsuffix"
 	"html/template"
 	"image"
 	"io"
@@ -483,6 +484,7 @@ func (r *Runner) testAndSet(k string) bool {
 	if strings.Contains(k, "*") {
 		return false
 	}
+
 	if r.seen(k) {
 		return false
 	}
@@ -1200,16 +1202,38 @@ func (r *Runner) process(t string, wg *sizedwaitgroup.SizedWaitGroup, hp *httpx.
 						defer wg.Done()
 						result := r.analyze(hp, protocol, target, method, t, scanopts)
 						output <- result
-						//这一块将AN目标加到扫描任务中了
+						//这一块将AN目标加到扫描任务中了，取出所有的加入到此次任务的一个列表中，去重后重新加入任务中，然后继续循环，直至所有an全部跑完
 						if scanopts.TLSProbe && result.TLSData != nil {
 							for _, tt := range result.TLSData.SubjectAN {
+								if net.ParseIP(tt) == nil {
+									ttrootdomain, err := publicsuffix.EffectiveTLDPlusOne(tt)
+									if err != nil {
+										gologger.Error().Msg(err.Error())
+									}
+									inputrootdomain, err := publicsuffix.EffectiveTLDPlusOne(result.Input)
+									if err != nil {
+										gologger.Error().Msg(err.Error())
+									}
+									if ttrootdomain != inputrootdomain {
+										continue
+									}
+								}
 								if !r.testAndSet(tt) {
+									gologger.Info().Msgf("url:%sAN:%s失败", result.URL, tt)
 									continue
 								}
-								r.process(tt, wg, hp, protocol, scanopts, output)
+								GobalACNList = append(GobalACNList, tt)
+								gologger.Info().Msgf("url:%sAN:%s成功", result.URL, tt)
+								//不直接扫描了，放入数据库重新生成任务，防止死循环
+								//r.process(tt, wg, hp, protocol, scanopts, output)
 							}
 							if r.testAndSet(result.TLSData.SubjectCN) {
-								r.process(result.TLSData.SubjectCN, wg, hp, protocol, scanopts, output)
+								gologger.Info().Msgf("url:%sCN:%s成功", result.URL, result.TLSData.SubjectCN)
+								GobalACNList = append(GobalACNList, result.TLSData.SubjectCN)
+								//不直接扫描了，放入数据库重新生成任务，防止死循环
+								//r.process(result.TLSData.SubjectCN, wg, hp, protocol, scanopts, output)
+							} else {
+								gologger.Info().Msgf("url:%sCN:%s失败", result.URL, result.TLSData.SubjectCN)
 							}
 						}
 						if scanopts.CSPProbe && result.CSPData != nil {
@@ -1254,15 +1278,39 @@ func (r *Runner) process(t string, wg *sizedwaitgroup.SizedWaitGroup, hp *httpx.
 						result := r.analyze(hp, protocol, target, method, t, scanopts)
 						output <- result
 						if scanopts.TLSProbe && result.TLSData != nil {
+							//这一块将AN目标加到扫描任务中了，取出所有的加入到此次任务的一个列表中，去重后重新加入任务中，然后继续循环，直至所有an全部跑完
 							for _, tt := range result.TLSData.SubjectAN {
+								if net.ParseIP(tt) == nil {
+									ttrootdomain, err := publicsuffix.EffectiveTLDPlusOne(tt)
+									if err != nil {
+										gologger.Error().Msg(err.Error())
+									}
+									inputrootdomain, err := publicsuffix.EffectiveTLDPlusOne(result.Input)
+									if err != nil {
+										gologger.Error().Msg(err.Error())
+									}
+									if ttrootdomain != inputrootdomain {
+										continue
+									}
+								}
 								if !r.testAndSet(tt) {
+									gologger.Info().Msgf("url:%sAN:%s失败", result.URL, tt)
 									continue
 								}
-								r.process(tt, wg, hp, protocol, scanopts, output)
+								GobalACNList = append(GobalACNList, tt)
+								gologger.Info().Msgf("url:%sAN:%s成功", result.URL, tt)
+								//不直接扫描了，放入数据库重新生成任务，防止死循环
+								//r.process(tt, wg, hp, protocol, scanopts, output)
 							}
 							if r.testAndSet(result.TLSData.SubjectCN) {
-								r.process(result.TLSData.SubjectCN, wg, hp, protocol, scanopts, output)
+								gologger.Info().Msgf("url:%sCN:%s成功", result.URL, result.TLSData.SubjectCN)
+								GobalACNList = append(GobalACNList, result.TLSData.SubjectCN)
+								//不直接扫描了，放入数据库重新生成任务，防止死循环
+								//r.process(result.TLSData.SubjectCN, wg, hp, protocol, scanopts, output)
+							} else {
+								gologger.Info().Msgf("url:%sCN:%s失败", result.URL, result.TLSData.SubjectCN)
 							}
+
 						}
 					}(port, target, method, wantedProtocol)
 				}
@@ -1819,7 +1867,7 @@ retry:
 		}
 		builder.WriteRune(']')
 	}
-
+	//魔改 增加iconmd5hash
 	var faviconMMH3, faviconPath, faviconMD5 string
 	if scanopts.Favicon {
 		var err error
@@ -2012,7 +2060,6 @@ retry:
 			headlessBody = ""
 		}
 	}
-
 	result := Result{
 		Timestamp:          time.Now(),
 		Request:            request,
@@ -2051,7 +2098,7 @@ retry:
 		Technologies:       technologies,
 		FinalURL:           finalURL,
 		FavIconMMH3:        faviconMMH3,
-		IConHash_MD5:       faviconMD5,
+		IconhashMd5:        faviconMD5,
 		FaviconPath:        faviconPath,
 		Hashes:             hashesMap,
 		Extracts:           extractResult,
@@ -2059,6 +2106,7 @@ retry:
 		Lines:              resp.Lines,
 		Words:              resp.Words,
 		ASN:                asnResponse,
+		ACN:                GobalACNList,
 		ExtractRegex:       extractRegex,
 		StoredResponsePath: responsePath,
 		ScreenshotBytes:    screenshotBytes,
@@ -2106,6 +2154,7 @@ func calculatePerceptionHash(screenshotBytes []byte) (uint64, error) {
 func (r *Runner) handleFaviconHash(hp *httpx.HTTPX, req *retryablehttp.Request, currentResp *httpx.Response) (string, string, string, error) {
 	var iconhash_md5 string
 	// Check if current URI is ending with .ico => use current body without additional requests
+	//魔改，增加iconhash_md5
 	if path.Ext(req.URL.Path) == ".ico" {
 		hash, err := r.calculateFaviconHashWithRaw(currentResp.Data)
 		if hash != "" {

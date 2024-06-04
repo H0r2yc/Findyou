@@ -58,7 +58,6 @@ func main() {
 			//探测是否redis为空，如果为空那么就重新提交Pending任务和target的waitscan任务
 			if redisdb.RedisIsNull() {
 				gologger.Info().Msg("redis为空且有任务未完成，等待1分钟重新提交任务")
-				time.Sleep(60 * time.Second)
 				//在获取一次是否有新增的数据，如果没有的话就继续，有bug
 				Status, _ = mysqldb.CheckAllTasksStatus("Completed")
 				if !Status {

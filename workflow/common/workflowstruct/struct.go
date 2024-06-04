@@ -27,6 +27,18 @@ type Fingerprints struct {
 	Name           string            `yaml:"name"`
 }
 
+type Urlentity struct {
+	Url           string
+	InputUrl      string
+	Title         string
+	Iconhash_md5  string
+	Iconhash_mmh3 string
+	Body          string
+	StatusCode    int
+	Header        map[string]interface{}
+	Status        bool
+}
+
 var WorkFlowDB map[string]WorkFlowEntity
 var GlobalEmbedPocs embed.FS
 

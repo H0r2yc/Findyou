@@ -31,8 +31,9 @@ func (o AsnResponse) String() string {
 
 // Result of a scan
 type Result struct {
-	Timestamp          time.Time              `json:"timestamp,omitempty" csv:"timestamp"`
-	ASN                *AsnResponse           `json:"asn,omitempty" csv:"asn"`
+	Timestamp          time.Time    `json:"timestamp,omitempty" csv:"timestamp"`
+	ASN                *AsnResponse `json:"asn,omitempty" csv:"asn"`
+	ACN                []string
 	Err                error                  `json:"-" csv:"-"`
 	CSPData            *httpx.CSPData         `json:"csp,omitempty" csv:"csp"`
 	TLSData            *clients.Response      `json:"tls,omitempty" csv:"tls"`
@@ -57,7 +58,7 @@ type Result struct {
 	Host               string `json:"host,omitempty" csv:"host"`
 	Path               string `json:"path,omitempty" csv:"path"`
 	FavIconMMH3        string `json:"favicon,omitempty" csv:"favicon"`
-	IConHash_MD5       string
+	IconhashMd5        string
 	FaviconPath        string                 `json:"favicon_path,omitempty" csv:"favicon_path"`
 	FinalURL           string                 `json:"final_url,omitempty" csv:"final_url"`
 	ResponseHeaders    map[string]interface{} `json:"header,omitempty" csv:"header"`
