@@ -35,7 +35,7 @@ type Urlentity struct {
 	Iconhash_mmh3 string
 	Body          string
 	StatusCode    int
-	Header        map[string]interface{}
+	Header        map[string][]string
 	Status        bool
 }
 

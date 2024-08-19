@@ -61,7 +61,7 @@ type Result struct {
 	IconhashMd5        string
 	FaviconPath        string                 `json:"favicon_path,omitempty" csv:"favicon_path"`
 	FinalURL           string                 `json:"final_url,omitempty" csv:"final_url"`
-	ResponseHeaders    map[string]interface{} `json:"header,omitempty" csv:"header"`
+	ResponseHeaders    map[string][]string    `json:"header,omitempty" csv:"header"`
 	RawHeaders         string                 `json:"raw_header,omitempty" csv:"raw_header"`
 	Request            string                 `json:"request,omitempty" csv:"request"`
 	ResponseTime       string                 `json:"time,omitempty" csv:"time"`

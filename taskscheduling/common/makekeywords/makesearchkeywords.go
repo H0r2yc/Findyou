@@ -93,7 +93,7 @@ func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	for _, ipcompany := range targetlist.Target.IP {
 		if ipcompany != "" {
 			data := strings.SplitN(ipcompany, ":", 2)
-			keyword = fmt.Sprintf("ip=\"%s/24\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("ip=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 
 		}

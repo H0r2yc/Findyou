@@ -181,7 +181,7 @@ func YamlToDBTargets(datas []string) error {
 			continue
 		}
 		targetdb := Targets{
-			Target:    target,
+			Target:    data[0],
 			CompanyID: taskstruct.CompanyID[data[1]],
 			TaskID:    0,
 			Status:    "Waiting",

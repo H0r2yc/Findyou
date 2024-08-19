@@ -188,7 +188,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	targets.SearchStatus = 1
 	targets.SearchCount = uint(len(responseJson.Results))
 	//如果是通过从db取出的domain然后查出的结果大于4000条，大概率是cdn等网站，标记为cdn
-	if strings.Contains(keyword, "(") && len(responseJson.Results) > 4000 {
+	if strings.Contains(keyword, "(") && len(responseJson.Results) > 2000 {
 		//99 代表可疑的搜索语句，可能不是目标单位，如果确定的话加入到target的yaml中
 		targets.SearchStatus = 99
 		return targets

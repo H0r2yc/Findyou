@@ -13,6 +13,7 @@ require (
 	github.com/projectdiscovery/interactsh v1.1.9
 	github.com/projectdiscovery/retryablehttp-go v1.0.58
 	github.com/projectdiscovery/utils v0.0.92
+	github.com/projectdiscovery/dnsx v1.2.1
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/mysql v1.5.6
 	gorm.io/gorm v1.25.9
@@ -327,7 +328,7 @@ require (
 
 replace (
 	//github.com/lcvvvv/gonmap v1.3.4 => ./lib/gonmap
-	//github.com/projectdiscovery/dnsx v1.1.6 => ./lib/dnsx
+	github.com/projectdiscovery/dnsx v1.2.1 => ./lib/dnsx
 	github.com/projectdiscovery/gologger v1.1.12 => ./lib/gologger
 	github.com/projectdiscovery/httpx v1.6.0 => ./lib/httpx
 	github.com/projectdiscovery/nuclei/v3 v3.2.6 => ./lib/nuclei

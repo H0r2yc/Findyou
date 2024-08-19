@@ -176,24 +176,28 @@ func New(options *Options) (*Runner, error) {
 	httpxOptions.Resolvers = options.Resolvers
 	httpxOptions.TlsImpersonate = options.TlsImpersonate
 
-	var key, value string
+	//var key, value string
 	httpxOptions.CustomHeaders = make(map[string]string)
-	for _, customHeader := range options.CustomHeaders {
-		tokens := strings.SplitN(customHeader, ":", two)
-		// rawhttp skips all checks
-		if options.Unsafe {
-			httpxOptions.CustomHeaders[customHeader] = ""
-			continue
-		}
+	//魔改，直接赋值map
+	httpxOptions.CustomHeaders = options.CustomHeaders
+	/*
+		for _, customHeader := range options.CustomHeaders {
+			tokens := strings.SplitN(customHeader, ":", two)
+			// rawhttp skips all checks
+			if options.Unsafe {
+				httpxOptions.CustomHeaders[customHeader] = ""
+				continue
+			}
 
-		// Continue normally
-		if len(tokens) < two {
-			continue
+			// Continue normally
+			if len(tokens) < two {
+				continue
+			}
+			key = strings.TrimSpace(tokens[0])
+			value = strings.TrimSpace(tokens[1])
+			httpxOptions.CustomHeaders[key] = value
 		}
-		key = strings.TrimSpace(tokens[0])
-		value = strings.TrimSpace(tokens[1])
-		httpxOptions.CustomHeaders[key] = value
-	}
+	*/
 	httpxOptions.SniName = options.SniName
 
 	runner.hp, err = httpx.New(&httpxOptions)
@@ -1219,21 +1223,21 @@ func (r *Runner) process(t string, wg *sizedwaitgroup.SizedWaitGroup, hp *httpx.
 									}
 								}
 								if !r.testAndSet(tt) {
-									gologger.Info().Msgf("url:%sAN:%s失败", result.URL, tt)
+									gologger.Info().Msgf("[ACN] %sAN:%s失败", result.URL, tt)
 									continue
 								}
 								GobalACNList = append(GobalACNList, tt)
-								gologger.Info().Msgf("url:%sAN:%s成功", result.URL, tt)
+								gologger.Info().Msgf("[ACN] %sAN:%s成功", result.URL, tt)
 								//不直接扫描了，放入数据库重新生成任务，防止死循环
 								//r.process(tt, wg, hp, protocol, scanopts, output)
 							}
 							if r.testAndSet(result.TLSData.SubjectCN) {
-								gologger.Info().Msgf("url:%sCN:%s成功", result.URL, result.TLSData.SubjectCN)
+								gologger.Info().Msgf("[ACN] %sCN:%s成功", result.URL, result.TLSData.SubjectCN)
 								GobalACNList = append(GobalACNList, result.TLSData.SubjectCN)
 								//不直接扫描了，放入数据库重新生成任务，防止死循环
 								//r.process(result.TLSData.SubjectCN, wg, hp, protocol, scanopts, output)
 							} else {
-								gologger.Info().Msgf("url:%sCN:%s失败", result.URL, result.TLSData.SubjectCN)
+								gologger.Info().Msgf("[ACN] %sCN:%s失败", result.URL, result.TLSData.SubjectCN)
 							}
 						}
 						if scanopts.CSPProbe && result.CSPData != nil {
@@ -1686,12 +1690,7 @@ retry:
 		serverResponseRaw  string
 		request            string
 		rawResponseHeaders string
-		responseHeaders    map[string]interface{}
 	)
-
-	if scanopts.ResponseHeadersInStdout {
-		responseHeaders = normalizeHeaders(resp.Headers)
-	}
 
 	respData := string(resp.Data)
 	if r.options.NoDecode {
@@ -1701,13 +1700,7 @@ retry:
 	if scanopts.ResponseInStdout || r.options.OutputMatchCondition != "" || r.options.OutputFilterCondition != "" {
 		serverResponseRaw = string(respData)
 		request = string(requestDump)
-		responseHeaders = normalizeHeaders(resp.Headers)
 		rawResponseHeaders = resp.RawHeaders
-	} else if scanopts.Base64ResponseInStdout {
-		serverResponseRaw = stringz.Base64([]byte(respData))
-		request = stringz.Base64(requestDump)
-		responseHeaders = normalizeHeaders(resp.Headers)
-		rawResponseHeaders = stringz.Base64([]byte(resp.RawHeaders))
 	}
 
 	// check for virtual host
@@ -2063,7 +2056,7 @@ retry:
 	result := Result{
 		Timestamp:          time.Now(),
 		Request:            request,
-		ResponseHeaders:    responseHeaders,
+		ResponseHeaders:    resp.Headers,
 		RawHeaders:         rawResponseHeaders,
 		Scheme:             parsed.Scheme,
 		Port:               finalPort,
@@ -2367,9 +2360,10 @@ func getDNSData(hp *httpx.HTTPX, hostname string) (ips, cnames []string, err err
 }
 
 func normalizeHeaders(headers map[string][]string) map[string]interface{} {
+	//魔改，不修改key的值-为_，且大小写保留
 	normalized := make(map[string]interface{}, len(headers))
 	for k, v := range headers {
-		normalized[strings.ReplaceAll(strings.ToLower(k), "-", "_")] = strings.Join(v, ", ")
+		normalized[k] = strings.Join(v, ";")
 	}
 	return normalized
 }

@@ -15,6 +15,7 @@ import (
 	"unicode/utf8"
 )
 
+// 目前ACN采取的方式是每次将ACN列表去重入库
 func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 	var urlentities []workflowstruct.Urlentity
 	var ancnlist []string
@@ -97,6 +98,7 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 	httpxRunner.RunEnumeration()
 	//下面是被动信息收集和指纹识别,以及acn入库targets
 	ancnlist = utils.RemoveDuplicateElement(ancnlist)
+	gologger.Info().Msgf("ANCN数量: %d", len(ancnlist))
 	err = mysqldb.TargetsToDB(ancnlist, 999, taskstruct.ID)
 	if err != nil {
 		gologger.Error().Msg(err.Error())
@@ -122,7 +124,7 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 			err = mysqldb.SensitiveInfoToDB(urlentity.Url, bodydata.PhoneNum, bodydata.Supplychain, bodydata.ICP)
 			gologger.Info().Msgf("[INFOFIND] %s [%s] [%s] [%s]\n", urlentity.Url, bodydata.ICP, bodydata.PhoneNum, bodydata.Supplychain)
 		}
-		//被动检测指纹
+		//被动及主动检测指纹
 		finger, priority, matched := fingerprint.Fingerprint(urlentity)
 		if matched {
 			gologger.Info().Msgf("[Finger] %s [%s] 等级：%d\n", urlentity.Url, finger, priority)
@@ -138,7 +140,7 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 		if urlentity.StatusCode >= 200 && urlentity.StatusCode < 500 {
 			err = mysqldb.ProcessTargets(target, urlentity.Title, "存活", finger, priority)
 		} else {
-			err = mysqldb.ProcessTargets(target, urlentity.Title, "非正常状态码", finger, priority)
+			err = mysqldb.ProcessTargets(target, urlentity.Title, "非正常状态码5xx", finger, priority)
 		}
 		if err != nil {
 			gologger.Error().Msgf("Failed to process target: %s,inputurl: %s", err.Error(), urlentity.InputUrl)

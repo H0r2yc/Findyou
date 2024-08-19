@@ -1,8 +1,11 @@
 package fingerprint
 
 import (
+	"Findyou.WorkFlow/common/httpxactivescan"
 	"Findyou.WorkFlow/common/utils"
 	"Findyou.WorkFlow/common/workflowstruct"
+	"github.com/projectdiscovery/gologger"
+	"net/url"
 	"strings"
 )
 
@@ -13,16 +16,32 @@ func Fingerprint(urlentity workflowstruct.Urlentity) (string, int, bool) {
 		matched    bool
 	)
 	for _, finger := range workflowstruct.FingerPrints {
-		//if finger.Name == "Sentry" {
-		//	gologger.Info().Msg("ssss")
-		//}
 		result := matchfinger(urlentity, finger)
-		if !result {
-			continue
-		} else {
+		if result {
 			fingername = append(fingername, finger.Name)
 			priority = finger.Priority
 			matched = true
+		}
+		if finger.Path != "/" || len(finger.RequestHeaders) > 0 || finger.RequestData != "" || strings.ToLower(finger.RequestMethod) != "get" {
+			var urls []string
+			if finger.Path != "/" {
+				// 解析URL
+				parsedURL, err := url.Parse(urlentity.Url)
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
+				parsedURL.Path = ""
+				urls = append(urls, parsedURL.String()+finger.Path)
+			} else {
+				urls = append(urls, urlentity.Url)
+			}
+			ActiveUrlentity := httpxactivescan.HttpxActiveScan(finger.RequestMethod, finger.RequestData, urls, finger.RequestHeaders)
+			result2 := matchfinger(ActiveUrlentity, finger)
+			if result2 {
+				fingername = append(fingername, finger.Name)
+				priority = finger.Priority
+				matched = true
+			}
 		}
 	}
 	fingername = utils.RemoveDuplicateElement(fingername)
@@ -50,7 +69,13 @@ func matchfinger(urlentity workflowstruct.Urlentity, finger workflowstruct.Finge
 	}
 	if len(finger.Headers) != 0 {
 		for key, value := range finger.Headers {
-			if urlentity.Header[key] != value {
+			matched := false
+			for _, headervalue := range urlentity.Header[key] {
+				if strings.Contains(headervalue, value) {
+					matched = true
+				}
+			}
+			if !matched {
 				return false
 			}
 		}
