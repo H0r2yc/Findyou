@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-func TestDnsX(t *testing.T) {
+func TestSubdomainBrute(t *testing.T) {
 	loadyaml.Loadyaml()
-	err := DnsX("ddxm.mobi")
+	err := SubdomainBrute([]string{"ddxm.mobi"})
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}

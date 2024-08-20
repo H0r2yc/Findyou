@@ -3,14 +3,9 @@ package workflowstruct
 import (
 	"embed"
 	"net"
-	"sync"
 )
 
 var FingerPrints []Fingerprints
-
-// GlobalIPDomainMap 存储ip->domains的关系
-var GlobalIPDomainMap map[string][]string
-var GlobalIPDomainMapLock sync.Mutex
 
 var Dirs map[string][]string
 
@@ -45,13 +40,17 @@ var GlobalEmbedPocs embed.FS
 // GlobalResultMap 存储识别到的指纹
 var GlobalResultMap map[string][]string
 
+type Subdomains struct {
+	Subdomains   []string
+	SubdomainIPs map[string][]string
+	IPs          []string
+}
+
 type Targets struct {
 	Targets      []string
 	Domains      []string
-	DomainIps    []string
+	DomainIps    map[string][]string
 	IPs          []string
-	Icps         []string
-	IsCDN        []uint
 	SearchCount  uint
 	SearchStatus uint
 }

@@ -98,9 +98,9 @@ func CheckCDN(domain string) (bool, string, []net.IP) {
 	return false, "", ips
 }
 
-func CheckCDNs(domains []string, threads int) (rCDNDomains []string, normalDomains []string, rIPs []string) {
+func CheckCDNs(domains []string, threads int) (rCDNDomains []string, normalDomains []string, rIPs map[string][]string) {
+	domainips := make(map[string][]string)
 	domains = utils.RemoveDuplicateElement(domains)
-
 	Addrs := make(chan string, len(domains))
 	defer close(Addrs)
 	results := make(chan workflowstruct.CDNResult, len(domains))
@@ -132,47 +132,13 @@ func CheckCDNs(domains []string, threads int) (rCDNDomains []string, normalDomai
 				normalDomainsLock.Lock()
 				normalDomains = append(normalDomains, result.Domain)
 				normalDomainsLock.Unlock()
-
+				rIPsLock.Lock()
+				var IPs []string
 				for _, each := range result.IPs {
-					rIPsLock.Lock()
-					rIPs = append(rIPs, each.String())
-					rIPsLock.Unlock()
+					IPs = append(IPs, each.String())
 				}
-				var ips []string
-				if len(result.IPs) != 0 {
-					// show := fmt.Sprintf("[RealIP] %v => ", result.Domain)
-					for _, ip := range result.IPs {
-						ips = append(ips, ip.String())
-						workflowstruct.GlobalIPDomainMapLock.Lock()
-						_, ok := workflowstruct.GlobalIPDomainMap[ip.String()]
-						workflowstruct.GlobalIPDomainMapLock.Unlock()
-						if ok {
-							// 存在于这个Map中
-							workflowstruct.GlobalIPDomainMapLock.Lock()
-							dms, _ := workflowstruct.GlobalIPDomainMap[ip.String()]
-							workflowstruct.GlobalIPDomainMapLock.Unlock()
-							flag := false
-							for _, dm := range dms {
-								if dm == result.Domain {
-									flag = true
-									break
-								}
-							}
-							if !flag { // 没有这个域名
-								workflowstruct.GlobalIPDomainMapLock.Lock()
-								workflowstruct.GlobalIPDomainMap[ip.String()] = append(workflowstruct.GlobalIPDomainMap[ip.String()],
-									result.Domain)
-								workflowstruct.GlobalIPDomainMapLock.Unlock()
-							}
-						} else {
-							workflowstruct.GlobalIPDomainMapLock.Lock()
-							workflowstruct.GlobalIPDomainMap[ip.String()] = []string{result.Domain}
-							workflowstruct.GlobalIPDomainMapLock.Unlock()
-						}
-					}
-
-				}
-
+				domainips[result.Domain] = IPs
+				rIPsLock.Unlock()
 			}
 			wg.Done()
 		}
@@ -199,7 +165,7 @@ func CheckCDNs(domains []string, threads int) (rCDNDomains []string, normalDomai
 	wg.Wait()
 
 	gologger.Info().Msg("CDN识别完毕")
-	return rCDNDomains, normalDomains, utils.RemoveDuplicateElement(rIPs)
+	return rCDNDomains, normalDomains, domainips
 }
 
 type DomainItem struct {

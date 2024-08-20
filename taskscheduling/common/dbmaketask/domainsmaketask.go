@@ -6,7 +6,6 @@ import (
 	"Findyou.TaskScheduling/common/makekeywords"
 	"Findyou.TaskScheduling/common/taskstruct"
 	"Findyou.TaskScheduling/common/utils"
-	"fmt"
 	"github.com/projectdiscovery/gologger"
 	"strconv"
 )
@@ -42,7 +41,7 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 	if len(fofakeywords) != 0 {
 		fofakeywords = utils.RemoveDuplicateElement(fofakeywords)
 		//写入keywords到tasks，状态waitting
-		keywordtasks, err := mysqldb.WriteKeywordsToTasks(fofakeywords, "FOFASEARCH")
+		keywordtasks, err := mysqldb.WriteStringListToTasks(fofakeywords, "FOFASEARCH")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
@@ -64,7 +63,7 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 			if len(fofakeywords) <= 100 {
 				err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", fofakeywords)
 				if err != nil {
-					fmt.Println("Error writing data to Redis:", err)
+					gologger.Error().Msgf("Error writing data to Redis:", err)
 					return err
 				}
 			} else {
@@ -72,7 +71,7 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 				for i := 0; i < len(splitslice); i++ {
 					err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
 					if err != nil {
-						fmt.Println("Error writing data to Redis:", err)
+						gologger.Error().Msgf("Error writing data to Redis:", err)
 						return err
 					}
 				}
@@ -88,35 +87,39 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 	}
 	//处理domain爆破
 	if len(subdomainbrute) != 0 {
-		//写入subdomainbrute到tasks，状态waitting
-		domaintask, err := mysqldb.WriteKeywordsToTasks(subdomainbrute, "SUBDOMAINBRUTE")
+		//遍历每个domain并写入subdomainbrute到tasks，状态waitting
+		domaintasks, err := mysqldb.WriteStringListToTasks(subdomainbrute, "SUBDOMAINBRUTE")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
-		if len(subdomainbrute) <= 100 {
-			err = redisdb.WriteDataToRedis(rediscon, "SUBDOMAINBRUTE", subdomainbrute)
-			if err != nil {
-				fmt.Println("Error writing data to Redis:", err)
-				return err
+		//判断是否已经生成过任务了
+		if domaintasks != nil {
+			//如果domaintask和subdomainbrute长度不一样，说明有部分subdomainbrute之前写入过，所以要重新生成一个domaintask
+			if len(subdomainbrute) != len(domaintasks) {
+				subdomainbrute = []string{}
+				for _, domaintask := range domaintasks {
+					subdomainbrute = append(subdomainbrute, domaintask.Task+"Findyou"+strconv.Itoa(int(domaintask.CompanyID)))
+				}
 			}
-		} else {
-			splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword+1)
-			for i := 0; i < len(splitslice); i++ {
-				err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
+			//遍历每个domain并生成爆破任务
+			for _, eachdomain := range subdomainbrute {
+				var eachdomainlist []string
+				eachdomainlist = append(eachdomainlist, eachdomain)
+				err = redisdb.WriteDataToRedis(rediscon, "SUBDOMAINBRUTE", eachdomainlist)
 				if err != nil {
-					fmt.Println("Error writing data to Redis:", err)
+					gologger.Error().Msgf("Error writing data to Redis:", err)
 					return err
 				}
 			}
-		}
-		for _, domain := range domaintask {
-			err = mysqldb.UpdateTasksStatus(domain, "Pending")
-			if err != nil {
-				gologger.Error().Msg(err.Error())
+			for _, domain := range domaintasks {
+				err = mysqldb.UpdateTasksStatus(domain, "Pending")
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
 			}
 		}
 	}
-	//修改数据库中ip状态
+	//修改数据库中domain状态
 	for _, domain := range waitdomains {
 		err = mysqldb.UpdateDomainsStatus(domain, "Completed")
 		if err != nil {

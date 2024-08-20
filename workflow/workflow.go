@@ -24,7 +24,7 @@ func Workflowrun() {
 		return
 	}
 	for {
-		gologger.Info().Msgf("当前workflow模块状态: \nFOFA搜索引擎:%v, HUNTER搜索引擎:%v, QUAKE搜索引擎:%v, CDN检查模块:%v, 子域名爆破模块:%v, 存活探测模块:%v, 目录扫描模块:%v, 指纹识别模块:%v, POC扫描模块:%v", appconfig.Module.Fofasearch, appconfig.Module.Huntersearch, appconfig.Module.Quakesearch, appconfig.Module.Cdncheck, appconfig.Module.Domainbrute, appconfig.Module.AliveAndPassivityScan, appconfig.Module.Dirbrute, appconfig.Module.Fingerprint, appconfig.Module.Pocscan)
+		gologger.Info().Msgf("当前workflow模块状态: \nFOFA搜索引擎:%v, HUNTER搜索引擎:%v, QUAKE搜索引擎:%v, CDN检查模块:%v, 子域名爆破模块:%v, 存活探测模块:%v, 目录扫描模块:%v, 指纹识别模块:%v, POC扫描模块:%v", appconfig.Module.Fofasearch, appconfig.Module.Huntersearch, appconfig.Module.Quakesearch, appconfig.Module.Cdncheck, appconfig.Module.SubDomainbrute, appconfig.Module.AliveAndPassivityScan, appconfig.Module.Dirbrute, appconfig.Module.Fingerprint, appconfig.Module.Pocscan)
 		//TODO: 爱企查及企查查接口获取目标单位信息
 		if redisdb.RedisIsNull() {
 			gologger.Info().Msg("Redis 数据库为空，等待任务")
@@ -44,15 +44,16 @@ func Workflowrun() {
 			gologger.Info().Msg("HUNTERSEARCH待实现")
 		case "SUBDOMAINBRUTE":
 			subdomainbrute.SubdomainBrute(value)
-			gologger.Info().Msg("SUBDOMAINBRUTE待实现")
 		case "ALIVEANDPASSIVITYSCAN":
 			httpxscan.Httpxscan(value, appconfig)
 		case "DIRBRUTE":
 			gologger.Info().Msg("DIRBRUTE待实现")
-		case "FINGERPRINT":
-			gologger.Info().Msg("FINGERPRINT待实现")
 		default:
-			gologger.Info().Msgf("未知任务类型%s", key)
+			if key == "" && value == nil {
+				gologger.Info().Msgf("任务类型功能未开启，等待任务中...")
+			} else {
+				gologger.Info().Msgf("未知任务类型%s", key)
+			}
 		}
 		//域名及CDN处理入库已经完成，全部放入domain库，后续直接读取iscdn为0的值对应的ip，并于ips目录ip进行对比然后加入到新的切片进行端口爆破及其他信息收集
 		//TODO 子域名爆破，超过一百个就立即删除否则会爆内存

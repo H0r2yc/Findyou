@@ -41,8 +41,6 @@ func CheckDuplicateRecord(database *gorm.DB, tableName string, columnName string
 		existingRecord = &SensitiveInfo{}
 	case "Keywords":
 		existingRecord = &Keywords{}
-	case "Tasks":
-		existingRecord = &Tasks{}
 	default:
 		return false, fmt.Errorf("invalid table name: %s", tableName)
 	}
@@ -55,6 +53,22 @@ func CheckDuplicateRecord(database *gorm.DB, tableName string, columnName string
 		return false, fmt.Errorf("failed to query %s record: %v", tableName, err)
 	}
 
+	return false, nil
+}
+
+// CheckDuplicateRecordInTask 检查task表中是否存在相同的数据，传入的表名和列名和申明的struct一致
+func CheckDuplicateRecordInTask(database *gorm.DB, columnName string, taskname, taskdata string) (bool, error) {
+	existingRecord := &Tasks{}
+	//column := database.NamingStrategy.ColumnName("", columnName)
+	if err := database.Where(fmt.Sprintf("%s = ?", columnName), taskdata).First(existingRecord).Error; err == nil {
+		// 如果已存在相同的数据，则返回 true
+		if existingRecord.TaskName == taskname {
+			return true, nil
+		}
+	} else if err != gorm.ErrRecordNotFound {
+		// 如果查询时发生错误，且不是未找到record，那么返回错误
+		return false, err
+	}
 	return false, nil
 }
 

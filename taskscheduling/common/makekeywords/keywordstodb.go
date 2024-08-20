@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/projectdiscovery/gologger"
 	"strconv"
+	"strings"
 )
 
 func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targetconfig) {
@@ -20,7 +21,7 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 	//defer redis.db.close()
 	if KeyWords.FofaKeyWords != nil {
 		//写入keywords到tasks，状态waitting
-		tasks, err := mysqldb.WriteKeywordsToTasks(KeyWords.FofaKeyWords, "FOFASEARCH")
+		tasks, err := mysqldb.WriteStringListToTasks(KeyWords.FofaKeyWords, "FOFASEARCH")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
@@ -72,7 +73,34 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 	if KeyWords.HunterKeyWords != "" {
 		//xxxx
 	}
-	gologger.Info().Msg("从配置文件生成任务成功")
+	//如果存在domain则生成子域名爆破任务
+	if targetconfig.Target.Domain != nil {
+		var subdomainbrute []string
+		for _, domain := range targetconfig.Target.Domain {
+			data := strings.SplitN(domain, ":", 2)
+			subdomainbrute = append(subdomainbrute, data[0]+"Findyou"+strconv.Itoa(int(taskstruct.CompanyID[data[1]])))
+		}
+		//写入subdomainbrute到tasks，状态waitting
+		domaintask, err := mysqldb.WriteStringListToTasks(subdomainbrute, "SUBDOMAINBRUTE")
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
+		if domaintask != nil {
+			err = redisdb.WriteDataToRedis(rediscon, "SUBDOMAINBRUTE", subdomainbrute)
+			if err != nil {
+				gologger.Error().Msgf("Error writing data to Redis:", err)
+			}
+			for _, domain := range domaintask {
+				err = mysqldb.UpdateTasksStatus(domain, "Pending")
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
+			}
+		} else {
+			gologger.Info().Msg("已经从配置文件生成过子域名爆破任务，跳过")
+		}
+
+	}
 	//domain以及ip入target库
 	err := mysqldb.YamlToDBTargets(targetconfig.Target.Domain)
 	if err != nil {
@@ -82,4 +110,5 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}
+	gologger.Info().Msg("从配置文件生成任务成功")
 }

@@ -31,15 +31,26 @@ func GetFromRedis(rediscon *redis.Client, appconfig *workflowstruct.Appconfig) (
 			}
 		}
 		if key == "HUNTERSEARCH" {
-			if !appconfig.OnlineAPI.IsHunter {
+			if !appconfig.Module.Huntersearch {
 				continue
 			}
 		}
 		if key == "QUAKESEARCH" {
-			if !appconfig.OnlineAPI.IsQuake {
+			if !appconfig.Module.Quakesearch {
 				continue
 			}
-		} // 执行 LPOP
+		}
+		if key == "ALIVEANDPASSIVITYSCAN" {
+			if !appconfig.Module.AliveAndPassivityScan {
+				continue
+			}
+		}
+		if key == "SUBDOMAINBRUTE" {
+			if !appconfig.Module.SubDomainbrute {
+				continue
+			}
+		}
+		// 执行 LPOP
 		val, err := rediscon.LPop(context.Background(), key).Result()
 		if err != nil {
 			return "", nil, err

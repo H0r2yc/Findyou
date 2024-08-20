@@ -6,7 +6,6 @@ type Appconfig struct {
 	Fingerprint Fingerprint `yaml:"fingerprint"`
 	//Domainscan   Domainscan  `yaml:"domainscan"`
 	Proxy        Proxy     `yaml:"proxy"`
-	OnlineAPI    OnlineAPI `yaml:"onlineapi"`
 	Mysql        Mysql     `yaml:"mysql"`
 	Redis        Redis     `yaml:"redis"`
 	CDNConfig    CDNConfig `yaml:"cdnconfig"`
@@ -20,17 +19,11 @@ type Module struct {
 	Huntersearch          bool `yaml:"huntersearch"`
 	Quakesearch           bool `yaml:"quakesearch"`
 	Cdncheck              bool `yaml:"cdncheck"`
-	Domainbrute           bool `yaml:"domainbrute"`
+	SubDomainbrute        bool `yaml:"subdomainbrute"`
 	AliveAndPassivityScan bool `yaml:"aliveandpassivityscan"`
 	Dirbrute              bool `yaml:"dirbrute"`
 	Fingerprint           bool `yaml:"fingerprint"`
 	Pocscan               bool `yaml:"pocscan"`
-}
-
-type OnlineAPI struct {
-	IsFofa   bool `yaml:"fofa"`
-	IsQuake  bool `yaml:"quake"`
-	IsHunter bool `yaml:"hunter"`
 }
 
 type Nuclei struct {

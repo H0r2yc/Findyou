@@ -47,6 +47,7 @@ type Runner struct {
 	stats               clistats.StatisticsClient
 	tmpStdinFile        string
 	aurora              aurora.Aurora
+	SubdomainResults    []string
 }
 
 func New(options *Options) (*Runner, error) {
@@ -576,28 +577,11 @@ func (r *Runner) runStream() error {
 func (r *Runner) HandleOutput() {
 	defer r.wgoutputworker.Done()
 
-	// setup output
-	var (
-		foutput *os.File
-		w       *bufio.Writer
-	)
-	if r.options.OutputFile != "" {
-		var err error
-		foutput, err = os.OpenFile(r.options.OutputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			gologger.Fatal().Msgf("%s\n", err)
-		}
-		defer foutput.Close()
-		w = bufio.NewWriter(foutput)
-		defer w.Flush()
-	}
 	for item := range r.outputchan {
-		if foutput != nil {
-			// uses a buffer to write to file
-			_, _ = w.WriteString(item + "\n")
-		}
+		//这个地方
+		r.SubdomainResults = append(r.SubdomainResults, item)
 		// writes sequentially to stdout
-		gologger.Silent().Msgf("%s\n", item)
+		// gologger.Silent().Msgf("[Brute] %s\n", item)
 	}
 }
 

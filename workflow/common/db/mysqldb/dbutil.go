@@ -6,6 +6,7 @@ import (
 	"github.com/projectdiscovery/gologger"
 	"golang.org/x/net/publicsuffix"
 	"gorm.io/gorm"
+	"strings"
 	"sync"
 )
 
@@ -67,7 +68,7 @@ func IpsToDB(ips []string, companyid uint) error {
 	return nil
 }
 
-func DomainsToDB(domains, domainsip []string, companyid uint) error {
+func DomainsToDB(domains []string, domainsip map[string][]string, companyid uint) error {
 	if len(domains) == 0 {
 		return nil
 	}
@@ -76,7 +77,7 @@ func DomainsToDB(domains, domainsip []string, companyid uint) error {
 		gologger.Error().Msg("获取数据库连接失败")
 	}
 	defer CloseDB(database)
-	for index, domain := range domains {
+	for _, domain := range domains {
 		isexists, err := CheckDuplicateRecord(database, "Domains", "Domain", domain)
 		if isexists {
 			continue
@@ -85,10 +86,10 @@ func DomainsToDB(domains, domainsip []string, companyid uint) error {
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
-		iscdn := domainsip[index] == ""
+		iscdn := len(domainsip[domain]) == 0
 		domainsdb := Domains{
 			Domain:     domain,
-			IP:         domainsip[index],
+			IP:         strings.Join(domainsip[domain], ","),
 			ISCdn:      iscdn,
 			CompanyID:  companyid,
 			RootDomain: rootdomain,
@@ -100,9 +101,13 @@ func DomainsToDB(domains, domainsip []string, companyid uint) error {
 		}
 	}
 	//不是cdn的ip写入到ips表中并初始化，因为有cdn的为空，所以先去除空值
-	domainsip = utils.RemoveDuplicateElement(domainsip)
+	var allip []string
+	for _, ips := range domainsip {
+		allip = append(allip, ips...)
+	}
+	allip = utils.RemoveDuplicateElement(allip)
 	var newIPs []string
-	for _, str := range domainsip {
+	for _, str := range allip {
 		if str != "" && !utils.StringInSlice(utils.GetCIDR(str), newIPs) {
 			newIPs = append(newIPs, str)
 		}

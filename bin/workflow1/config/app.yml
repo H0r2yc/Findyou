@@ -3,7 +3,7 @@ module:
   huntersearch: false
   quakesearch: false
   cdncheck: true
-  domainbrute: false
+  subdomainbrute: false
   aliveandpassivityscan: true
   dirbrute: true
   fingerprint: true
@@ -13,7 +13,7 @@ api:
   searchPageSize: 100
   searchLimitCount: 1000
   fofa:
-    key: yiheng6221@163.com:093208d32a4b0202b925240b81e9b739
+    key: yiheng6221@163.com:73a981a7b5b4959fa50588051444021c
   #key: ying.hu@qingteng.cn:00954c8731415dfe6cd7f97820c4ce10
   icp:
     key: ""
@@ -73,8 +73,3 @@ mysql:
 redis:
   host: 127.0.0.1:6379
   password: nbanbpro
-
-onlineapi:
-  fofa: true
-  quake: false
-  hunter: false

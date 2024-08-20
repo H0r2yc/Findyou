@@ -32,14 +32,14 @@ func WriteToTasks(db *gorm.DB, tasks Tasks) error {
 	return nil
 }
 
-func WriteKeywordsToTasks(searchlist []string, TaskName string) ([]Tasks, error) {
+func WriteStringListToTasks(stringlist []string, TaskName string) ([]Tasks, error) {
 	var tasks []Tasks
 	database := GetDB()
 	defer CloseDB(database)
 	if database == nil {
 		return nil, errors.New("获取数据库连接失败")
 	}
-	for _, keywords := range searchlist {
+	for _, keywords := range stringlist {
 		keyword := strings.SplitN(keywords, "Findyou", 2)
 		companyid, err := strconv.Atoi(keyword[1])
 		if err != nil {
@@ -47,7 +47,7 @@ func WriteKeywordsToTasks(searchlist []string, TaskName string) ([]Tasks, error)
 			gologger.Error().Msg(err.Error())
 		}
 
-		exists, err := CheckDuplicateRecord(database, "Tasks", "Task", keyword[0])
+		exists, err := CheckDuplicateRecordInTask(database, "Task", TaskName, keyword[0])
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
@@ -79,7 +79,7 @@ func WriteNoFindyouToTasks(datas []string, TaskName string) ([]Tasks, error) {
 	if database == nil {
 		return nil, errors.New("获取数据库连接失败")
 	}
-	exists, err := CheckDuplicateRecord(database, "Tasks", "Task", strings.Join(datas, ","))
+	exists, err := CheckDuplicateRecordInTask(database, "Task", TaskName, strings.Join(datas, ","))
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}
@@ -115,7 +115,7 @@ func WriteTargetsToTasks(TargetsList [][]string, ListSize int, TaskName string) 
 	}
 	for i := 0; i < ListSize; i++ {
 		taskcontent := strings.Join(TargetsList[i], ",")
-		exists, err := CheckDuplicateRecord(database, "Tasks", "Task", taskcontent)
+		exists, err := CheckDuplicateRecordInTask(database, "Task", TaskName, taskcontent)
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}

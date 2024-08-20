@@ -121,10 +121,11 @@ func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 
 // 从Fofa中搜索目标
 func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowstruct.Targets {
-	targets := workflowstruct.Targets{}
+	targets := workflowstruct.Targets{
+		DomainIps: make(map[string][]string),
+	}
 	opts := retryablehttp.DefaultOptionsSpraying
 	client := retryablehttp.NewClient(opts)
-	workflowstruct.GlobalIPDomainMap = make(map[string][]string)
 	url := "https://fofa.info/api/v1/search/all"
 	if !strings.Contains(fofakey, ":") {
 		gologger.Fatal().Msg("请核对FOFA API KEY格式。正确格式为: email:key")
@@ -187,7 +188,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	}
 	targets.SearchStatus = 1
 	targets.SearchCount = uint(len(responseJson.Results))
-	//如果是通过从db取出的domain然后查出的结果大于4000条，大概率是cdn等网站，标记为cdn
+	//如果是通过从db取出的domain然后查出的结果大于2000条，大概率是cdn等第三方网站，标记为cdn
 	if strings.Contains(keyword, "(") && len(responseJson.Results) > 2000 {
 		//99 代表可疑的搜索语句，可能不是目标单位，如果确定的话加入到target的yaml中
 		targets.SearchStatus = 99
@@ -197,8 +198,6 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	// 做一个域名缓存，避免重复dns请求
 	var Domains []string
 	var ips []string
-	DomainIPMap := make(map[string]string)
-	domainCDNMap := make(map[string]bool)
 	var protocol, ip, port, host, domain string
 	for _, result := range responseJson.Results {
 		host = result[0]
@@ -231,8 +230,6 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 			}
 			realHost := strings.ReplaceAll(host, protocol+"://", "")
 			domain = strings.ReplaceAll(realHost, ":"+port, "")
-			//添加domainIP的映射关系，并添加到待检测cdn的Domains中
-			DomainIPMap[domain] = ip
 			Domains = append(Domains, domain)
 			//如果不是常见端口，那么就加入一个url到target，如果是常规端口，那么直接加入域名到target，毕竟网络空间引擎并不能实时探测网站的状态，万一协议有变化
 			if port != "80" && port != "443" {
@@ -270,27 +267,27 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	//if !strings.Contains(keyword, "ip=") && len(Domains) != 0 {
 	if len(Domains) != 0 {
 		gologger.Info().Msgf("正在查询 [%v] 个域名是否为CDN资产", len(Domains))
-		cdnDomains, normalDomains, _ := cdn.CheckCDNs(Domains, cdnthread)
+		cdnDomains, normalDomains, domainips := cdn.CheckCDNs(Domains, cdnthread)
 		gologger.Info().Msgf("CDN资产为 [%v] 个", len(cdnDomains))
 		for _, d := range cdnDomains {
-			_, ok := domainCDNMap[d]
-			if !ok {
-				targets.Domains = append(targets.Domains, d)
-				targets.IsCDN = append(targets.IsCDN, 1)
-				targets.DomainIps = append(targets.DomainIps, "")
-			}
+			targets.Domains = append(targets.Domains, d)
 		}
 		for _, d := range normalDomains {
-			_, ok := domainCDNMap[d]
-			if !ok {
-				targets.Domains = append(targets.Domains, d)
-				targets.IsCDN = append(targets.IsCDN, 0)
-				targets.DomainIps = append(targets.DomainIps, DomainIPMap[d])
-				targets.Targets = append(targets.Targets, DomainIPMap[d])
+			targets.Domains = append(targets.Domains, d)
+			targets.Targets = append(targets.Targets, d)
+			//如果解析失败了，那么就以0.0.0.0替代
+			if domainips[d] != nil {
+				targets.DomainIps[d] = domainips[d]
+			} else {
+				targets.DomainIps[d] = []string{"0.0.0.0"}
 			}
 		}
 	}
-	//domain已经判断过是否重复
+	//将不是cdn的domain解析ip放入targets
+	for _, domainip := range targets.DomainIps {
+		targets.Targets = append(targets.Targets, domainip...)
+	}
+	//domain已经判断过是否重复所以不用去重，targets需要去重
 	targets.Targets = utils.RemoveDuplicateElement(targets.Targets)
 	if ips != nil {
 		ips = utils.RemoveDuplicateElement(ips)

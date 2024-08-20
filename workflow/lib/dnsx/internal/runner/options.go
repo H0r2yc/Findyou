@@ -11,8 +11,6 @@ import (
 	"github.com/projectdiscovery/goflags"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/levels"
-	"github.com/projectdiscovery/utils/auth/pdcp"
-	"github.com/projectdiscovery/utils/env"
 	fileutil "github.com/projectdiscovery/utils/file"
 	updateutils "github.com/projectdiscovery/utils/update"
 )
@@ -86,104 +84,62 @@ func (options *Options) ShouldSaveResume() bool {
 }
 
 // ParseOptions parses the command line options for application
-func ParseOptions() *Options {
+func ParseOptions(domain, dictfile string) *Options {
 	options := &Options{}
 	flagSet := goflags.NewFlagSet()
 	flagSet.SetDescription(`dnsx is a fast and multi-purpose DNS toolkit allow to run multiple probes using retryabledns library.`)
+	//修改dnsxflag部分，直接调用
+	//TODO 可否传入[]string，dnsx内部是否已经实现多线程？
+	options.Domains = domain
+	options.WordList = dictfile
+	//默认线程100
+	options.Threads = 100
+	// 关闭每秒请求数量限制
+	options.RateLimit = -1
 
-	flagSet.CreateGroup("input", "Input",
-		flagSet.StringVarP(&options.Hosts, "list", "l", "", "list of sub(domains)/hosts to resolve (file or stdin)"),
-		flagSet.StringVarP(&options.Domains, "domain", "d", "", "list of domain to bruteforce (file or comma separated or stdin)"),
-		flagSet.StringVarP(&options.WordList, "wordlist", "w", "", "list of words to bruteforce (file or comma separated or stdin)"),
-	)
+	options.A = true
+	options.AAAA = false
+	options.CNAME = false
+	options.NS = false
+	options.TXT = false
+	options.SRV = false
+	options.PTR = false
+	options.MX = false
+	options.SOA = false
+	options.AXFR = false
+	options.CAA = false
 
-	queries := goflags.AllowdTypes{
-		"none":  goflags.EnumVariable(0),
-		"a":     goflags.EnumVariable(1),
-		"aaaa":  goflags.EnumVariable(2),
-		"cname": goflags.EnumVariable(3),
-		"ns":    goflags.EnumVariable(4),
-		"txt":   goflags.EnumVariable(5),
-		"srv":   goflags.EnumVariable(6),
-		"ptr":   goflags.EnumVariable(7),
-		"mx":    goflags.EnumVariable(8),
-		"soa":   goflags.EnumVariable(9),
-		"axfr":  goflags.EnumVariable(10),
-		"caa":   goflags.EnumVariable(11),
-		"any":   goflags.EnumVariable(12),
-	}
+	options.Response = false
+	options.ResponseOnly = false
+	options.RCode = ""
 
-	flagSet.CreateGroup("query", "Query",
-		flagSet.BoolVar(&options.A, "a", false, "query A record (default)"),
-		flagSet.BoolVar(&options.AAAA, "aaaa", false, "query AAAA record"),
-		flagSet.BoolVar(&options.CNAME, "cname", false, "query CNAME record"),
-		flagSet.BoolVar(&options.NS, "ns", false, "query NS record"),
-		flagSet.BoolVar(&options.TXT, "txt", false, "query TXT record"),
-		flagSet.BoolVar(&options.SRV, "srv", false, "query SRV record"),
-		flagSet.BoolVar(&options.PTR, "ptr", false, "query PTR record"),
-		flagSet.BoolVar(&options.MX, "mx", false, "query MX record"),
-		flagSet.BoolVar(&options.SOA, "soa", false, "query SOA record"),
-		flagSet.BoolVar(&options.ANY, "any", false, "query ANY record"),
-		flagSet.BoolVar(&options.AXFR, "axfr", false, "query AXFR"),
-		flagSet.BoolVar(&options.CAA, "caa", false, "query CAA record"),
-		flagSet.BoolVar(&options.QueryAll, "recon", false, "query all the dns records (a,aaaa,cname,ns,txt,srv,ptr,mx,soa,axfr,caa)"),
-		flagSet.EnumSliceVarP(&options.ExcludeType, "exclude-type", "e", []goflags.EnumVariable{0}, "dns query type to exclude (a,aaaa,cname,ns,txt,srv,ptr,mx,soa,axfr,caa)", queries),
-	)
+	options.OutputCDN = false
+	options.ASN = false
 
-	flagSet.CreateGroup("filter", "Filter",
-		flagSet.BoolVarP(&options.Response, "resp", "re", false, "display dns response"),
-		flagSet.BoolVarP(&options.ResponseOnly, "resp-only", "ro", false, "display dns response only"),
-		flagSet.StringVarP(&options.RCode, "rcode", "rc", "", "filter result by dns status code (eg. -rcode noerror,servfail,refused)"),
-	)
+	options.DisableUpdateCheck = true
 
-	flagSet.CreateGroup("probe", "Probe",
-		flagSet.BoolVar(&options.OutputCDN, "cdn", false, "display cdn name"),
-		flagSet.BoolVar(&options.ASN, "asn", false, "display host asn information"),
-	)
+	options.OutputFile = ""
+	options.JSON = false
 
-	flagSet.CreateGroup("rate-limit", "Rate-limit",
-		flagSet.IntVarP(&options.Threads, "threads", "t", 100, "number of concurrent threads to use"),
-		flagSet.IntVarP(&options.RateLimit, "rate-limit", "rl", -1, "number of dns request/second to make (disabled as default)"),
-	)
+	options.HealthCheck = false
+	options.Silent = false
+	options.Verbose = false
 
-	flagSet.CreateGroup("update", "Update",
-		flagSet.CallbackVarP(GetUpdateCallback(), "update", "up", "update dnsx to latest version"),
-		flagSet.BoolVarP(&options.DisableUpdateCheck, "disable-update-check", "duc", false, "disable automatic dnsx update check"),
-	)
+	options.Raw = false
+	options.ShowStatistics = false
+	options.Version = false
 
-	flagSet.CreateGroup("output", "Output",
-		flagSet.StringVarP(&options.OutputFile, "output", "o", "", "file to write output"),
-		flagSet.BoolVarP(&options.JSON, "json", "j", false, "write output in JSONL(ines) format"),
-		flagSet.BoolVarP(&options.OmitRaw, "or", "omit-raw", false, "omit raw dns response from jsonl output"),
-	)
+	// 重试次数
+	options.Retries = 2
+	options.HostsFile = false
+	options.Trace = false
+	options.TraceMaxRecursion = math.MaxInt16
+	options.Resume = false
+	options.Stream = false
 
-	flagSet.CreateGroup("debug", "Debug",
-		flagSet.BoolVarP(&options.HealthCheck, "health-check", "hc", false, "run diagnostic check up"),
-		flagSet.BoolVar(&options.Silent, "silent", false, "display only results in the output"),
-		flagSet.BoolVarP(&options.Verbose, "verbose", "v", false, "display verbose output"),
-		flagSet.BoolVarP(&options.Raw, "debug", "raw", false, "display raw dns response"),
-		flagSet.BoolVar(&options.ShowStatistics, "stats", false, "display stats of the running scan"),
-		flagSet.BoolVar(&options.Version, "version", false, "display version of dnsx"),
-		flagSet.BoolVarP(&options.NoColor, "no-color", "nc", false, "disable color in output"),
-	)
-
-	flagSet.CreateGroup("optimization", "Optimization",
-		flagSet.IntVar(&options.Retries, "retry", 2, "number of dns attempts to make (must be at least 1)"),
-		flagSet.BoolVarP(&options.HostsFile, "hostsfile", "hf", false, "use system host file"),
-		flagSet.BoolVar(&options.Trace, "trace", false, "perform dns tracing"),
-		flagSet.IntVar(&options.TraceMaxRecursion, "trace-max-recursion", math.MaxInt16, "Max recursion for dns trace"),
-		flagSet.BoolVar(&options.Resume, "resume", false, "resume existing scan"),
-		flagSet.BoolVar(&options.Stream, "stream", false, "stream mode (wordlist, wildcard, stats and stop/resume will be disabled)"),
-	)
-
-	flagSet.CreateGroup("configs", "Configurations",
-		flagSet.DynamicVar(&options.PdcpAuth, "auth", "true", "configure projectdiscovery cloud (pdcp) api key"),
-		flagSet.StringVarP(&options.Resolvers, "resolver", "r", "", "list of resolvers to use (file or comma separated)"),
-		flagSet.IntVarP(&options.WildcardThreshold, "wildcard-threshold", "wt", 5, "wildcard filter threshold"),
-		flagSet.StringVarP(&options.WildcardDomain, "wildcard-domain", "wd", "", "domain name for wildcard filtering (other flags will be ignored - only json output is supported)"),
-	)
-
-	_ = flagSet.Parse()
+	options.Resolvers = ""
+	options.WildcardThreshold = 5
+	options.WildcardDomain = ""
 
 	if options.HealthCheck {
 		gologger.Print().Msgf("%s\n", DoHealthCheck(options, flagSet))
@@ -204,22 +160,6 @@ func ParseOptions() *Options {
 	if err != nil {
 		gologger.Fatal().Msgf("%s\n", err)
 	}
-
-	// api key hierarchy: cli flag > env var > .pdcp/credential file
-	if options.PdcpAuth == "true" {
-		AuthWithPDCP()
-	} else if len(options.PdcpAuth) == 36 {
-		PDCPApiKey = options.PdcpAuth
-		ph := pdcp.PDCPCredHandler{}
-		if _, err := ph.GetCreds(); err == pdcp.ErrNoCreds {
-			apiServer := env.GetEnvOrDefault("PDCP_API_SERVER", pdcp.DefaultApiServer)
-			if validatedCreds, err := ph.ValidateAPIKey(PDCPApiKey, apiServer, "dnsx"); err == nil {
-				_ = ph.SaveCreds(validatedCreds)
-			}
-		}
-	}
-
-	showBanner()
 
 	if options.Version {
 		gologger.Info().Msgf("Current Version: %s\n", version)

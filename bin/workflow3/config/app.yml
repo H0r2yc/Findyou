@@ -3,7 +3,7 @@ module:
   huntersearch: false
   quakesearch: false
   cdncheck: true
-  domainbrute: false
+  subdomainbrute: true
   aliveandpassivityscan: true
   dirbrute: true
   fingerprint: true

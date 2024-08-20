@@ -30,7 +30,7 @@ func HttpxActiveScan(protocol, bodydata string, url []string, headers map[string
 		DisableStdin:              true,
 		Timeout:                   10,
 		Retries:                   2,
-		HTTPProxy:                 "http://127.0.0.1:8080",
+		HTTPProxy:                 "",
 		NoFallbackScheme:          true,
 		RandomAgent:               true,
 		Threads:                   100,

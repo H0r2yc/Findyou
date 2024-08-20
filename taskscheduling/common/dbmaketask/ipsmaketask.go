@@ -33,7 +33,7 @@ func IPsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targe
 	}
 	if len(fofakeywords) != 0 {
 		//写入keywords到tasks，状态waitting
-		tasks, err := mysqldb.WriteKeywordsToTasks(fofakeywords, "FOFASEARCH")
+		tasks, err := mysqldb.WriteStringListToTasks(fofakeywords, "FOFASEARCH")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
