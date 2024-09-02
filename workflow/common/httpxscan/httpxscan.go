@@ -39,7 +39,7 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 		Hashes:                    "md5",
 		ResponseInStdout:          true,
 		OutputServerHeader:        true,
-		TLSProbe:                  true,
+		TLSProbe:                  false,
 		FollowHostRedirects:       true,
 		MaxResponseBodySizeToRead: 1048576,
 		MaxRedirects:              5,
@@ -125,7 +125,7 @@ func Httpxscan(targets []string, appconfig *workflowstruct.Appconfig) {
 			gologger.Info().Msgf("[INFOFIND] %s [%s] [%s] [%s]\n", urlentity.Url, bodydata.ICP, bodydata.PhoneNum, bodydata.Supplychain)
 		}
 		//被动及主动检测指纹
-		finger, priority, matched := fingerprint.Fingerprint(urlentity)
+		finger, priority, matched := fingerprint.Fingerprint(urlentity, appconfig.Fingerprint.EnableActiveScan)
 		if matched {
 			gologger.Info().Msgf("[Finger] %s [%s] 等级：%d\n", urlentity.Url, finger, priority)
 			highleveltarget := mysqldb.HighLevelTargets{

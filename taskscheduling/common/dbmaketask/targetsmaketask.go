@@ -26,7 +26,7 @@ func TargetsMakeTasks(status, taskname, taskstatus string, listnum int) error {
 		alivefingerlist = append(alivefingerlist, target.Target)
 	}
 	if len(alivefingerlist) != 0 {
-		if len(alivefingerlist) <= 500 {
+		if len(alivefingerlist) <= 200 {
 			//写入keywords到tasks，状态waitting
 			tasks, err = mysqldb.WriteNoFindyouToTasks(alivefingerlist, taskname)
 			if err != nil {

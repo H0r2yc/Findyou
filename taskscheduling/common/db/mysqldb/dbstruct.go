@@ -27,7 +27,7 @@ type KeywordsList struct {
 	//keywords是为了第一次生成的时候用，后面db生成不再需要
 	FofaKeyWords   []string
 	FofaKeyWord    string
-	HunterKeyWords string
+	HunterKeyWords []string
 	QuakeKeyWords  string
 }
 

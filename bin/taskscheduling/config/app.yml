@@ -14,7 +14,7 @@ api:
 onlineapi:
   fofa: true
   quake: false
-  hunter: false
+  hunter: true
 
 mysql:
   host: 127.0.0.1

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Fingerprint(urlentity workflowstruct.Urlentity) (string, int, bool) {
+func Fingerprint(urlentity workflowstruct.Urlentity, enableactivescan bool) (string, int, bool) {
 	var (
 		fingername []string
 		priority   int
@@ -22,7 +22,7 @@ func Fingerprint(urlentity workflowstruct.Urlentity) (string, int, bool) {
 			priority = finger.Priority
 			matched = true
 		}
-		if finger.Path != "/" || len(finger.RequestHeaders) > 0 || finger.RequestData != "" || strings.ToLower(finger.RequestMethod) != "get" {
+		if (finger.Path != "/" || len(finger.RequestHeaders) > 0 || finger.RequestData != "" || strings.ToLower(finger.RequestMethod) != "get") && enableactivescan {
 			var urls []string
 			if finger.Path != "/" {
 				// 解析URL

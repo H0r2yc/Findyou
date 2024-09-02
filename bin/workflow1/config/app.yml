@@ -41,7 +41,7 @@ fingerprint:
     - "/admin"
   screenshot: true
   fingerprinthub: true
-  iconhash: true
+  activeScan: false
   fingerprintx: true
 
 nuclei:

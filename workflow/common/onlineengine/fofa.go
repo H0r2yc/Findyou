@@ -274,7 +274,6 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 		}
 		for _, d := range normalDomains {
 			targets.Domains = append(targets.Domains, d)
-			targets.Targets = append(targets.Targets, d)
 			//如果解析失败了，那么就以0.0.0.0替代
 			if domainips[d] != nil {
 				targets.DomainIps[d] = domainips[d]
@@ -286,6 +285,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	//将不是cdn的domain解析ip放入targets
 	for _, domainip := range targets.DomainIps {
 		targets.Targets = append(targets.Targets, domainip...)
+		ips = append(ips, domainip...)
 	}
 	//domain已经判断过是否重复所以不用去重，targets需要去重
 	targets.Targets = utils.RemoveDuplicateElement(targets.Targets)

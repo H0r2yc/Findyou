@@ -41,9 +41,14 @@ func Workflowrun() {
 		case "FOFASEARCH":
 			onlineengine.FOFASearch(value, appconfig)
 		case "HUNTERSEARCH":
-			gologger.Info().Msg("HUNTERSEARCH待实现")
+			onlineengine.HunterSearch(value, appconfig)
+		case "QUAKESEARCH":
+			//onlineengine.FOFASearch(value, appconfig)
 		case "SUBDOMAINBRUTE":
-			subdomainbrute.SubdomainBrute(value)
+			err := subdomainbrute.SubdomainBrute(value)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
 		case "ALIVEANDPASSIVITYSCAN":
 			httpxscan.Httpxscan(value, appconfig)
 		case "DIRBRUTE":

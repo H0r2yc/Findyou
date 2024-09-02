@@ -78,10 +78,6 @@ func DBFOFAMakeKeyword(targetconfig *taskstruct.Targetconfig, data, datatype str
 func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	var searchlist []string
 	var keyword string
-	database := mysqldb.GetDB()
-	if database == nil {
-		gologger.Error().Msg("获取数据库连接失败")
-	}
 	for _, name := range targetlist.Target.Name {
 		if name != "" {
 			keyword = fmt.Sprintf("cert=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", name, taskstruct.CompanyID[name])
@@ -127,8 +123,50 @@ func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	return searchlist
 }
 
-func HunterMakeKeyword(targetconfig *taskstruct.Targetconfig) string {
-	return "nil"
+func HunterMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
+	var searchlist []string
+	var keyword string
+	for _, name := range targetlist.Target.Name {
+		if name != "" {
+			keyword = fmt.Sprintf("icp.name=\"%s\" && ip.country=\"CN\" && ip.country!=\"HK\" && ip.country!=\"TW\"Findyou%d", name, taskstruct.CompanyID[name])
+			searchlist = append(searchlist, keyword)
+			keyword = fmt.Sprintf("web.title=\"%s\" && title=\"系统\" && cert!=\"%s\" && ip.country=\"CN\" && ip.country!=\"HK\" && ip.country!=\"TW\"Findyou%d", name, name, taskstruct.CompanyID[name])
+			searchlist = append(searchlist, keyword)
+		}
+	}
+	for _, ipcompany := range targetlist.Target.IP {
+		if ipcompany != "" {
+			data := strings.SplitN(ipcompany, ":", 2)
+			keyword = fmt.Sprintf("ip=\"%s\" && ip.country=\"CN\" && ip.country!=\"HK\" && ip.country!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			searchlist = append(searchlist, keyword)
+
+		}
+	}
+
+	for _, domain := range targetlist.Target.Domain {
+		if domain != "" {
+			data := strings.SplitN(domain, ":", 2)
+			keyword = fmt.Sprintf("domain.suffix=\"%s\" && ip.country=\"CN\" && ip.country!=\"HK\" && ip.country!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			searchlist = append(searchlist, keyword)
+			keyword = fmt.Sprintf("cert=\"%s\" && domain!=\"%s\" && host!=\"%s\" && ip.country=\"CN\" && ip.country!=\"HK\" && ip.country!=\"TW\"Findyou%d", data[0], data[0], data[0], taskstruct.CompanyID[data[1]])
+			searchlist = append(searchlist, keyword)
+		}
+	}
+	for _, cert := range targetlist.Target.Cert {
+		if cert != "" {
+			data := strings.SplitN(cert, ":", 2)
+			keyword = fmt.Sprintf("cert=\"%s\" && ip.country=\"CN\" && ip.country!=\"HK\" && ip.country!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			searchlist = append(searchlist, keyword)
+
+		}
+	}
+	for _, searchword := range targetlist.Customizesyntax.Fofa {
+		if searchword != "" {
+			keyword = searchword
+			searchlist = append(searchlist, keyword)
+		}
+	}
+	return searchlist
 }
 
 func QuakeMakeKeyword(targetconfig *taskstruct.Targetconfig) string {
