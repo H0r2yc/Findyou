@@ -1,1 +1,0 @@
-taskscheduling.exe >>log.log

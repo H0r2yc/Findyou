@@ -8,7 +8,7 @@ import (
 
 func TestSubdomainBrute(t *testing.T) {
 	loadyaml.Loadyaml()
-	err := SubdomainBrute([]string{"ddxm.mobi"})
+	err := SubdomainBrute([]string{"xiaohongshu.com"})
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}

@@ -22,7 +22,6 @@ func SplitSlice(strs []string, num int) [][]string {
 		}
 		result = append(result, strs[i:end])
 	}
-
 	return result
 }
 

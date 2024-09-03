@@ -50,18 +50,32 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 			}
 			for i := 0; i < len(splitslice); i++ {
 				exists, err := redisdb.IsDataInSet(rediscon, "FOFASEARCH", splitslice[i])
+				if err != nil {
+					fmt.Println("Error get data from Redis:", err)
+					for _, task := range tasks {
+						err = mysqldb.UpdateTasksStatus(task, "Failed")
+						if err != nil {
+							gologger.Error().Msg(err.Error())
+						}
+					}
+				}
 				if exists {
 					continue
 				}
 				err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
 				if err != nil {
 					fmt.Println("Error writing data to Redis:", err)
-					return
+					for _, task := range tasks {
+						err = mysqldb.UpdateTasksStatus(task, "Failed")
+						if err != nil {
+							gologger.Error().Msg(err.Error())
+						}
+					}
 				}
 
 			}
-			for _, keyword := range tasks {
-				err = mysqldb.UpdateTasksStatus(keyword, "Pending")
+			for _, task := range tasks {
+				err = mysqldb.UpdateTasksStatus(task, "Pending")
 				if err != nil {
 					gologger.Error().Msg(err.Error())
 				}
@@ -101,13 +115,27 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 			}
 			for i := 0; i < len(splitslice); i++ {
 				exists, err := redisdb.IsDataInSet(rediscon, "HUNTERSEARCH", splitslice[i])
+				if err != nil {
+					fmt.Println("Error writing data to Redis:", err)
+					for _, task := range tasks {
+						err = mysqldb.UpdateTasksStatus(task, "Failed")
+						if err != nil {
+							gologger.Error().Msg(err.Error())
+						}
+					}
+				}
 				if exists {
 					continue
 				}
 				err = redisdb.WriteDataToRedis(rediscon, "HUNTERSEARCH", splitslice[i])
 				if err != nil {
 					fmt.Println("Error writing data to Redis:", err)
-					return
+					for _, task := range tasks {
+						err = mysqldb.UpdateTasksStatus(task, "Failed")
+						if err != nil {
+							gologger.Error().Msg(err.Error())
+						}
+					}
 				}
 
 			}
@@ -135,7 +163,14 @@ func YAMLMakeKeywordsToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstr
 			if domaintask != nil {
 				err = redisdb.WriteDataToRedis(rediscon, "SUBDOMAINBRUTE", subdomainbrute)
 				if err != nil {
-					gologger.Error().Msgf("Error writing data to Redis:", err)
+					fmt.Println("Error writing data to Redis:", err)
+					for _, domain := range domaintask {
+						err = mysqldb.UpdateTasksStatus(domain, "Failed")
+						if err != nil {
+							gologger.Error().Msg(err.Error())
+						}
+					}
+					return
 				}
 				for _, domain := range domaintask {
 					err = mysqldb.UpdateTasksStatus(domain, "Pending")

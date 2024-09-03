@@ -2,6 +2,7 @@ package redisdb
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/projectdiscovery/gologger"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/net/context"
@@ -22,14 +23,17 @@ func RedisIsNull() bool {
 	}
 }
 
-func WriteDataToRedis(db *redis.Client, key string, data []string) error {
+func WriteDataToRedis(rediscon *redis.Client, key string, data []string) error {
+	if rediscon == nil {
+		return errors.New("rediscon is nil")
+	}
 	// 将 []string 转换为 JSON 格式
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 	// 创建 Redis 列表的命令
-	err = db.RPush(context.Background(), key, jsonData).Err()
+	err = rediscon.RPush(context.Background(), key, jsonData).Err()
 	if err != nil {
 		return err
 	}
@@ -37,6 +41,9 @@ func WriteDataToRedis(db *redis.Client, key string, data []string) error {
 }
 
 func IsDataInSet(rediscon *redis.Client, key string, data []string) (bool, error) {
+	if rediscon == nil {
+		return false, errors.New("rediscon is nil")
+	}
 	ctx := context.Background()
 	jsonData, err := json.Marshal(data)
 	if err != nil {

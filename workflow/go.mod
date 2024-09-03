@@ -6,14 +6,13 @@ require (
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/miekg/dns v1.1.59
 	github.com/pkg/errors v0.9.1
+	github.com/projectdiscovery/dnsx v1.2.1
 	github.com/projectdiscovery/goflags v0.1.50
 	github.com/projectdiscovery/gologger v1.1.12
-	github.com/projectdiscovery/hmap v0.0.41
 	github.com/projectdiscovery/httpx v1.6.0
-	github.com/projectdiscovery/interactsh v1.1.9
 	github.com/projectdiscovery/retryablehttp-go v1.0.58
+	github.com/projectdiscovery/subfinder/v2 v2.6.6
 	github.com/projectdiscovery/utils v0.0.92
-	github.com/projectdiscovery/dnsx v1.2.1
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/mysql v1.5.6
 	gorm.io/gorm v1.25.9
@@ -26,12 +25,14 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/corona10/goimagehash v1.1.0 // indirect
+	github.com/corpix/uarand v0.2.0 // indirect
 	github.com/davidmz/go-pageant v1.0.2 // indirect
 	github.com/getkin/kin-openapi v0.123.0 // indirect
 	github.com/go-faker/faker/v4 v4.1.1 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-openapi/jsonpointer v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.9 // indirect
+	github.com/hako/durafmt v0.0.0-20210316092057-3a2c319c1acd // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/invopop/jsonschema v0.12.0 // indirect
 	github.com/invopop/yaml v0.2.0 // indirect
@@ -45,10 +46,14 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
+	github.com/projectdiscovery/chaos-client v0.5.1 // indirect
+	github.com/projectdiscovery/hmap v0.0.41 // indirect
+	github.com/projectdiscovery/interactsh v1.1.9 // indirect
 	github.com/remeh/sizedwaitgroup v1.0.0 // indirect
 	github.com/seh-msft/burpxml v1.0.1 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
+	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 )
 
@@ -189,7 +194,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
-	github.com/lib/pq v1.10.1 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/libdns/libdns v0.2.1 // indirect
 	github.com/lor00x/goldap v0.0.0-20180618054307-a546dffdd1a3 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
@@ -248,7 +253,7 @@ require (
 	github.com/projectdiscovery/wappalyzergo v0.0.120 // indirect
 	github.com/projectdiscovery/yamldoc-go v1.0.4 // indirect
 	github.com/quic-go/quic-go v0.42.0 // indirect
-	github.com/redis/go-redis/v9 v9.1.0 // indirect
+	github.com/redis/go-redis/v9 v9.1.0
 	github.com/refraction-networking/utls v1.6.1 // indirect
 	github.com/rivo/uniseg v0.4.6 // indirect
 	github.com/rs/xid v1.5.0 // indirect
@@ -306,12 +311,12 @@ require (
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a // indirect
 	golang.org/x/mod v0.16.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/net v0.24.0
 	golang.org/x/oauth2 v0.11.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/term v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.14.0
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -332,6 +337,6 @@ replace (
 	github.com/projectdiscovery/gologger v1.1.12 => ./lib/gologger
 	github.com/projectdiscovery/httpx v1.6.0 => ./lib/httpx
 	github.com/projectdiscovery/nuclei/v3 v3.2.6 => ./lib/nuclei
-//github.com/projectdiscovery/subfinder/v2 v2.6.5 => ./lib/subfinder/v2
+	github.com/projectdiscovery/subfinder/v2 v2.6.6 => ./lib/subfinder/v2
 //github.com/tomatome/grdp v0.1.0 => github.com/shadow1ng/grdp v1.0.3
 )

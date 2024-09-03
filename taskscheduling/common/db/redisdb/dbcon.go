@@ -20,7 +20,7 @@ func GetRedisClient() *redis.Client {
 	if globalRedisClient != nil {
 		return globalRedisClient
 	}
-	const MAXRETRYNUMBER = 5
+	const MAXRETRYNUMBER = 500
 	const RetriedSleepTime = 5 * time.Second
 	RetriedCount := 0
 	for {

@@ -7,11 +7,24 @@ import (
 	"Findyou.TaskScheduling/common/makekeywords"
 	"Findyou.TaskScheduling/common/taskstruct"
 	"Findyou.TaskScheduling/common/utils"
+	"fmt"
 	"github.com/projectdiscovery/gologger"
+	"github.com/projectdiscovery/gologger/levels"
+	"github.com/projectdiscovery/gologger/writer"
+	"os"
 	"time"
 )
 
 func main() {
+	fileWriter, err := NewFileWriter("taskscheduling.log")
+	if err != nil {
+		fmt.Println("Error creating file writer:", err)
+		return
+	}
+	consoleWriter := &ConsoleWriter{}
+	multiWriter := NewMultiWriter(fileWriter, consoleWriter)
+	gologger.DefaultLogger.SetWriter(multiWriter)
+
 	//检查数据库状态，读取app.yaml和target.yaml
 	appconfig, targetconfig := prepare()
 	//从target.yaml生成对应平台的keywords并写入到mysql和redis
@@ -102,4 +115,48 @@ func prepare() (*taskstruct.Appconfig, *taskstruct.Targetconfig) {
 	mysqldb.DBCompaniesToStruct()
 	mysqldb.YamlCompanyToDB(targetconfig)
 	return appconfig, targetconfig
+}
+
+// MultiWriter 实现了 Writer 接口，并能够将日志写入多个输出目标
+type MultiWriter struct {
+	writers []writer.Writer
+}
+
+// NewMultiWriter 创建一个 MultiWriter 实例
+func NewMultiWriter(writers ...writer.Writer) *MultiWriter {
+	return &MultiWriter{writers: writers}
+}
+
+// Write 方法会将日志信息写入所有目标
+func (m *MultiWriter) Write(data []byte, level levels.Level) {
+	for _, writer := range m.writers {
+		writer.Write(data, level)
+	}
+}
+
+// FileWriter 实现了 Writer 接口，并将日志写入文件
+type FileWriter struct {
+	file *os.File
+}
+
+// NewFileWriter 创建一个 FileWriter 实例
+func NewFileWriter(filename string) (*FileWriter, error) {
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+	return &FileWriter{file: file}, nil
+}
+
+// Write 将日志信息写入文件
+func (f *FileWriter) Write(data []byte, level levels.Level) {
+	f.file.Write(data)
+}
+
+// ConsoleWriter 实现了 Writer 接口，并将日志信息写入控制台
+type ConsoleWriter struct{}
+
+// Write 将日志信息输出到控制台
+func (c *ConsoleWriter) Write(data []byte, level levels.Level) {
+	fmt.Print(string(data) + "\n")
 }

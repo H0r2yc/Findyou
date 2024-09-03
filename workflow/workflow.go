@@ -7,7 +7,11 @@ import (
 	"Findyou.WorkFlow/common/onlineengine"
 	"Findyou.WorkFlow/common/subdomainbrute"
 	"Findyou.WorkFlow/common/utils"
+	"fmt"
 	"github.com/projectdiscovery/gologger"
+	"github.com/projectdiscovery/gologger/levels"
+	"github.com/projectdiscovery/gologger/writer"
+	"os"
 	"time"
 )
 
@@ -17,6 +21,15 @@ func main() {
 }
 
 func Workflowrun() {
+	fileWriter, err := NewFileWriter("workflow.log")
+	if err != nil {
+		fmt.Println("Error creating file writer:", err)
+		return
+	}
+	consoleWriter := &ConsoleWriter{}
+	multiWriter := NewMultiWriter(fileWriter, consoleWriter)
+	gologger.DefaultLogger.SetWriter(multiWriter)
+	//上面为使用multi的log记录格式
 	appconfig := utils.GetAppConf()
 	rediscon := redisdb.GetRedisClient()
 	if rediscon == nil {
@@ -73,4 +86,48 @@ func Workflowrun() {
 		gologger.Info().Msg("当前任务运行结束")
 		time.Sleep(10 * time.Second)
 	}
+}
+
+// MultiWriter 实现了 Writer 接口，并能够将日志写入多个输出目标
+type MultiWriter struct {
+	writers []writer.Writer
+}
+
+// NewMultiWriter 创建一个 MultiWriter 实例
+func NewMultiWriter(writers ...writer.Writer) *MultiWriter {
+	return &MultiWriter{writers: writers}
+}
+
+// Write 方法会将日志信息写入所有目标
+func (m *MultiWriter) Write(data []byte, level levels.Level) {
+	for _, writer := range m.writers {
+		writer.Write(data, level)
+	}
+}
+
+// FileWriter 实现了 Writer 接口，并将日志写入文件
+type FileWriter struct {
+	file *os.File
+}
+
+// NewFileWriter 创建一个 FileWriter 实例
+func NewFileWriter(filename string) (*FileWriter, error) {
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, err
+	}
+	return &FileWriter{file: file}, nil
+}
+
+// Write 将日志信息写入文件
+func (f *FileWriter) Write(data []byte, level levels.Level) {
+	f.file.Write(data)
+}
+
+// ConsoleWriter 实现了 Writer 接口，并将日志信息写入控制台
+type ConsoleWriter struct{}
+
+// Write 将日志信息输出到控制台
+func (c *ConsoleWriter) Write(data []byte, level levels.Level) {
+	fmt.Print(string(data) + "\n")
 }
