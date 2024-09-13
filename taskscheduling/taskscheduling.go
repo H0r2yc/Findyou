@@ -29,7 +29,7 @@ func main() {
 	appconfig, targetconfig := prepare()
 	//从target.yaml生成对应平台的keywords并写入到mysql和redis
 	if !targetconfig.OtherSet.DBScan {
-		makekeywords.YAMLMakeKeywordsToDB(appconfig, targetconfig)
+		makekeywords.YAMLMakeTasksToDB(appconfig, targetconfig)
 	} else {
 		gologger.Info().Msg("跳过从配置文件生成任务")
 	}

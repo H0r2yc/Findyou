@@ -65,7 +65,7 @@ func Workflowrun() {
 		case "ALIVEANDPASSIVITYSCAN":
 			httpxscan.Httpxscan(value, appconfig)
 		case "DIRBRUTE":
-			gologger.Info().Msg("DIRBRUTE待实现")
+			gologger.Info().Msg("DIRBRUTE待实现,常规目录app,test,login,subdomain")
 		default:
 			if key == "" && value == nil {
 				gologger.Info().Msgf("任务类型功能未开启，等待任务中...")
