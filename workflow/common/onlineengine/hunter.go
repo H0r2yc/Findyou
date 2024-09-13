@@ -61,7 +61,7 @@ func HunterSearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 				gologger.Error().Msg(err.Error())
 			}
 		}
-		result := SearchHunterCore(keywords[0], appconfig.API.Fofa.Key, 100, appconfig.CDNConfig.CDNBruteForceThreads)
+		result := SearchHunterCore(keywords[0], appconfig.API.Hunter.Key, 100, appconfig.CDNConfig.CDNBruteForceThreads)
 		//如果是99那么就添加备注信息
 		if result.SearchStatus == 99 {
 			err = mysqldb.ProcessTasks(dbtask, "Completed")
@@ -77,11 +77,11 @@ func HunterSearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 		if result.SearchStatus != 1 && result.SearchStatus != 99 {
 			gologger.Info().Msg("状态异常，10秒后重试中...")
 			time.Sleep(10 * time.Second)
-			result = SearchHunterCore(keywords[0], appconfig.API.Fofa.Key, 100, appconfig.CDNConfig.CDNBruteForceThreads)
+			result = SearchHunterCore(keywords[0], appconfig.API.Hunter.Key, 100, appconfig.CDNConfig.CDNBruteForceThreads)
 			if result.SearchStatus != 1 && result.SearchStatus != 99 {
 				gologger.Info().Msg("状态异常，10秒后重试中...")
 				time.Sleep(10 * time.Second)
-				result = SearchHunterCore(keywords[0], appconfig.API.Fofa.Key, 100, appconfig.CDNConfig.CDNBruteForceThreads)
+				result = SearchHunterCore(keywords[0], appconfig.API.Hunter.Key, 100, appconfig.CDNConfig.CDNBruteForceThreads)
 				if result.SearchStatus != 1 && result.SearchStatus != 99 {
 					gologger.Error().Msg("出错了，即将禁用workflow当前hunter搜索模块")
 					status = false
@@ -145,6 +145,8 @@ func SearchHunterCore(keyword, hunterkey string, maxQueryPage, cdnthread int) wo
 	url := "https://hunter.qianxin.com/openApi/search"
 	if hunterkey == "" {
 		gologger.Fatal().Msg("Hunter KEY为空")
+		targets.SearchStatus = 5
+		return targets
 	}
 	page := 1
 	currentQueryCount := 0
@@ -168,7 +170,7 @@ func SearchHunterCore(keyword, hunterkey string, maxQueryPage, cdnthread int) wo
 
 		resp, errDo := client.Do(req)
 		if errDo != nil {
-			gologger.Error().Msgf("[Hunter] %s 资产查询失败！请检查网络状态。Error:%s", keyword, errDo.Error())
+			gologger.Error().Msgf("[HUNTER] %s 资产查询失败！请检查网络状态。Error:%s", keyword, errDo.Error())
 			targets.SearchStatus = 0
 			time.Sleep(time.Second * 3)
 			continue
@@ -177,7 +179,7 @@ func SearchHunterCore(keyword, hunterkey string, maxQueryPage, cdnthread int) wo
 
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
-			gologger.Error().Msgf("获取Hunter 响应Body失败: %v", err.Error())
+			gologger.Error().Msgf("获取HUNTER 响应Body失败: %v", err.Error())
 			targets.SearchStatus = 2
 			time.Sleep(time.Second * 3)
 			continue
@@ -185,14 +187,14 @@ func SearchHunterCore(keyword, hunterkey string, maxQueryPage, cdnthread int) wo
 
 		var responseJson HunterResp
 		if err = json.Unmarshal(data, &responseJson); err != nil {
-			gologger.Error().Msgf("[Hunter] 返回数据Json解析失败! Error:%s", err.Error())
+			gologger.Error().Msgf("[HUNTER] 返回数据Json解析失败! Error:%s", err.Error())
 			targets.SearchStatus = 2
 			time.Sleep(time.Second * 3)
 			continue
 		}
 
 		if responseJson.Code != 200 {
-			gologger.Error().Msgf("[Hunter] %s 搜索失败！Error:%s", keyword, responseJson.Message)
+			gologger.Error().Msgf("[HUNTER] %s 搜索失败！Error:%s", keyword, responseJson.Message)
 
 			if strings.Contains(responseJson.Message, "今日免费积分已用") ||
 				strings.Contains(responseJson.Message, "今日免费积分不足") {
@@ -203,14 +205,14 @@ func SearchHunterCore(keyword, hunterkey string, maxQueryPage, cdnthread int) wo
 
 			if responseJson.Message == "请求太多啦，稍后再试试" {
 				targets.SearchStatus = 3
-				gologger.Error().Msg("[Hunter] 请求频率过快")
+				gologger.Error().Msg("[HUNTER] 请求频率过快")
 				time.Sleep(time.Second * 3)
 				continue
 			}
 			return targets
 		}
 		if responseJson.Data.Total == 0 {
-			gologger.Error().Msgf("[Hunter] %s 无结果。", keyword)
+			gologger.Error().Msgf("[HUNTER] %s 无结果。", keyword)
 			targets.SearchStatus = 1
 			return targets
 		}
@@ -218,14 +220,13 @@ func SearchHunterCore(keyword, hunterkey string, maxQueryPage, cdnthread int) wo
 		targets.SearchStatus = 1
 		targets.SearchCount = uint(responseJson.Data.Total)
 		currentQueryCount += len(responseJson.Data.InfoArr)
-		gologger.Info().Msgf("[Hunter] [%s] 已查询: %d/%d", keyword, currentQueryCount, responseJson.Data.Total)
+		gologger.Info().Msgf("[HUNTER] [%s] 已查询: %d/%d", keyword, currentQueryCount, responseJson.Data.Total)
 		//如果是通过从db取出的domain然后查出的结果大于2000条，大概率是cdn等第三方网站，标记为cdn
 		if strings.Contains(keyword, "(") && len(responseJson.Data.InfoArr) > 2000 {
 			//99 代表可疑的搜索语句，可能不是目标单位，如果确定的话加入到target的yaml中
 			targets.SearchStatus = 99
 			return targets
 		}
-		// 做一个域名缓存，避免重复dns请求
 		var Domains []string
 		var ips []string
 		//这儿是ip和domain添加到target的逻辑，如果不是常规端口就添加整个url到target,如果是常规端口就添加ip或domain,毕竟网络空间引擎并不能实时探测网站的状态，万一协议有变化

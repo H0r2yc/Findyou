@@ -24,11 +24,13 @@ Paused（已暂停）
 //FINGERPRINT
 
 type KeywordsList struct {
-	//keywords是为了第一次生成的时候用，后面db生成不再需要
+	//keywords是为了第一次生成的时候用，后面db生成的时候是通过遍历domain然后生成一个较长的搜索语句，所以不需要[]string
 	FofaKeyWords   []string
 	FofaKeyWord    string
 	HunterKeyWords []string
-	QuakeKeyWords  string
+	HunterKeyWord  string
+	QuakeKeyWords  []string
+	QuakeKeyWord   string
 }
 
 // 定义数据库模型

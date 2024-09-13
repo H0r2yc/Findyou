@@ -56,7 +56,7 @@ func Workflowrun() {
 		case "HUNTERSEARCH":
 			onlineengine.HunterSearch(value, appconfig)
 		case "QUAKESEARCH":
-			//onlineengine.FOFASearch(value, appconfig)
+			onlineengine.QUAKESearch(value, appconfig)
 		case "SUBDOMAINBRUTE":
 			err := subdomainbrute.SubdomainBrute(value)
 			if err != nil {

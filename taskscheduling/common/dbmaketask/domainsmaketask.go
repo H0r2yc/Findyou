@@ -14,8 +14,8 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 	rediscon := redisdb.GetRedisClient()
 	var fofakeywords []string
 	var subdomainbrute []string
-	//var hunterkeywords []string
-	//var quakekeywords []string
+	var hunterkeywords []string
+	var quakekeywords []string
 	var splitslice [][]string
 	waitdomains, err := mysqldb.GetAllDomains("Waiting", true)
 	if err != nil {
@@ -30,8 +30,8 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 		if targetconfig.OtherSet.DomainSearch {
 			keyword := makekeywords.Makekeywordfromdb(appconfig, targetconfig, domainstruct.RootDomain, "Domains", domainstruct.CompanyID)
 			fofakeywords = append(fofakeywords, keyword.FofaKeyWord)
-			//hunterkeywords = append(hunterkeywords, keyword.HunterKeyWords...)
-			//quakekeywords = append(quakekeywords, keyword.QuakeKeyWords...)
+			hunterkeywords = append(hunterkeywords, keyword.HunterKeyWords...)
+			quakekeywords = append(quakekeywords, keyword.QuakeKeyWords...)
 		}
 		//生成domainbrute列表
 		subdomainbrute = append(subdomainbrute, domainstruct.RootDomain+"Findyou"+strconv.Itoa(int(domainstruct.CompanyID)))

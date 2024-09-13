@@ -55,6 +55,26 @@ func FromKeywordGetDomain(keyword string) string {
 	return keyword
 }
 
+func FromQuakeKeywordGetDomain(keyword string) string {
+	if strings.Contains(keyword, "AND NOT") {
+		firstkeyword := strings.Split(keyword, "AND NOT")[0]
+		firstkeyword = strings.ReplaceAll(firstkeyword, "(", "")
+		firstkeyword = strings.ReplaceAll(firstkeyword, ")", "")
+		if strings.Contains(firstkeyword, "AND") {
+			keyword = strings.Split(strings.Split(firstkeyword, "AND")[0], "=")[1]
+		} else {
+			keyword = strings.Split(firstkeyword, "=")[1]
+		}
+	} else {
+		if strings.Contains(keyword, "AND") {
+			keyword = strings.Split(strings.Split(keyword, "AND")[0], "=")[1]
+		} else {
+			keyword = strings.Split(keyword, "=")[1]
+		}
+	}
+	return keyword
+}
+
 func RemoveDuplicateElement(input []string) []string {
 	temp := map[string]struct{}{}
 	var result []string

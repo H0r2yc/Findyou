@@ -18,9 +18,9 @@ api:
   icp:
     key: ""
   quake:
-    key: ""
+    key: "035c1bd9-0ac4-4a0f-a23b-42cb8c6abb5c"
   hunter:
-    key: ""
+    key: "ced8fd312475a35afd76cc07ea7b54ec977216a96b7ca6e34b578d62f7f411af"
 portscan:
   ping: false
   port: --top-ports 1000

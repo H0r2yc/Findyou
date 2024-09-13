@@ -129,6 +129,8 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	url := "https://fofa.info/api/v1/search/all"
 	if !strings.Contains(fofakey, ":") {
 		gologger.Fatal().Msg("请核对FOFA API KEY格式。正确格式为: email:key")
+		targets.SearchStatus = 3
+		return targets
 	}
 	tmp := strings.Split(fofakey, ":")
 	email := tmp[0]
@@ -155,7 +157,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 
 	resp, errDo := client.Do(req)
 	if errDo != nil {
-		gologger.Error().Msgf("[Fofa] [%s] 资产查询失败！请检查网络状态。Error:%s", keyword, errDo.Error())
+		gologger.Error().Msgf("[FOFA] [%s] 资产查询失败！请检查网络状态。Error:%s", keyword, errDo.Error())
 		targets.SearchStatus = 0
 		return targets
 	}
@@ -164,26 +166,26 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		targets.SearchStatus = 2
-		gologger.Error().Msgf("[Fofa] 获取Fofa 响应Body失败: %v", err.Error())
+		gologger.Error().Msgf("[FOFA] 获取Fofa 响应Body失败: %v", err.Error())
 		return targets
 	}
 
 	var responseJson FOFAResponseJson
 	if err = json.Unmarshal(data, &responseJson); err != nil {
 		targets.SearchStatus = 2
-		gologger.Error().Msgf("[Fofa] 返回数据Json解析失败! Error:%s", err.Error())
+		gologger.Error().Msgf("[FOFA] 返回数据Json解析失败! Error:%s", err.Error())
 		return targets
 	}
 
 	if responseJson.Error {
 		targets.SearchStatus = 2
-		gologger.Error().Msgf("[Fofa] [%s] 搜索失败！返回响应体Error为True。返回信息: %v", keyword, string(data))
+		gologger.Error().Msgf("[FOFA] [%s] 搜索失败！返回响应体Error为True。返回信息: %v", keyword, string(data))
 		return targets
 	}
 
 	if responseJson.Size == 0 {
 		targets.SearchStatus = 1
-		gologger.Info().Msgf("[Fofa] [%s] 无结果。", keyword)
+		gologger.Info().Msgf("[FOFA] [%s] 无结果。", keyword)
 		return targets
 	}
 	targets.SearchStatus = 1
@@ -194,8 +196,7 @@ func SearchFOFACore(keyword, fofakey string, pageSize, cdnthread int) workflowst
 		targets.SearchStatus = 99
 		return targets
 	}
-	gologger.Info().Msgf("[Fofa] [%s] 已查询: %d/%d", keyword, len(responseJson.Results), responseJson.Size)
-	// 做一个域名缓存，避免重复dns请求
+	gologger.Info().Msgf("[FOFA] [%s] 已查询: %d/%d", keyword, len(responseJson.Results), responseJson.Size)
 	var Domains []string
 	var ips []string
 	var protocol, ip, port, host, domain string

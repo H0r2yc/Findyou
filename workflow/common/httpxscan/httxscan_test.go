@@ -11,7 +11,7 @@ import (
 // 测试函数
 func TestHttpxscan(t *testing.T) {
 	loadyaml.Loadyaml()
-	targetlist := []string{"http://www.zjholdings.cn"}
+	targetlist := []string{"http://39.104.77.27/seeyon/index.jsp"}
 	appconfig := workflowstruct.Appconfig{
 		Httpxconfig: workflowstruct.Httpx{
 			WebTimeout: 5,

@@ -1,10 +1,13 @@
 bevigil: []
-binaryedge: []
+binaryedge:
+  - 6a1ec52a-ce62-473a-86f8-acfa72dcf262
 bufferover: []
 builtwith: []
 c99: []
-censys: []
-certspotter: []
+censys:
+  - edc696db-1299-4dc7-9683-c450ac4ffa58:JMCcLaJ7J1ZG36Ykb95u7Xyub9P5ESHA
+certspotter:
+  - k56128_UZrF0oyzeLcMiGEDIpS8
 chaos: []
 chinaz: []
 dnsdb: []
@@ -22,7 +25,8 @@ quake: []
 redhuntlabs: []
 robtex: []
 securitytrails: []
-shodan: []
+shodan:
+  - 5qUhcMV0iGLhQ2Mq5Uwswmjt1ifoRznB
 threatbook: []
 virustotal: []
 whoisxmlapi: []
