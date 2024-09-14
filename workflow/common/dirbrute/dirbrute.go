@@ -23,6 +23,8 @@ func DirBrute(targets []string, appconfig *workflowstruct.Appconfig) {
 	}
 	//设置可能存在漏洞的url列表
 	var highlevellist []mysqldb.HighLevelTargets
+	//生成一个target和目录的对应表，方便查找target并快速获取companyid
+	targetdirdict := make(map[string]string)
 	//开始生成目录扫描的列表
 	var dirbrutetargets []string
 	for _, target := range targets {
@@ -32,12 +34,16 @@ func DirBrute(targets []string, appconfig *workflowstruct.Appconfig) {
 		}
 		if subdomain != "" {
 			dirbrutetargets = append(dirbrutetargets, rooturl+"/"+subdomain)
+			targetdirdict[rooturl+"/"+subdomain] = target
 		}
 		dirbrutetargets = append(dirbrutetargets, rooturl+"/app")
+		targetdirdict[rooturl+"/app"] = target
 		dirbrutetargets = append(dirbrutetargets, rooturl+"/home")
+		targetdirdict[rooturl+"/home"] = target
 		dirbrutetargets = append(dirbrutetargets, rooturl+"/login")
+		targetdirdict[rooturl+"/login"] = target
 		dirbrutetargets = append(dirbrutetargets, rooturl+"/nacos")
-
+		targetdirdict[rooturl+"/nacos"] = target
 	}
 	//先进行get探测加了目录的目标，将200的目标放入targets库，后面根据主动指纹库，对所有的目标进行批量识别，节省资源
 	gologger.Info().Msg("开始目录扫描")
@@ -49,8 +55,8 @@ func DirBrute(targets []string, appconfig *workflowstruct.Appconfig) {
 		if urlentity.StatusCode < 200 || urlentity.StatusCode >= 500 {
 			continue
 		}
-		//查找target,要和公司信息对应
-		target, err := mysqldb.GetTargetID(urlentity.InputUrl)
+		//查找target,使用之前生成的map对应关系直接找到companyid
+		target, err := mysqldb.GetTargetUrlID(targetdirdict[urlentity.InputUrl])
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 			target.CompanyID = 999
@@ -75,10 +81,15 @@ func DirBrute(targets []string, appconfig *workflowstruct.Appconfig) {
 			highlevellist = append(highlevellist, highleveltarget)
 		}
 		if urlentity.StatusCode == 200 || finger != "" || urlentity.Title != "" {
-			err = mysqldb.TargetsToDB([]string{urlentity.Url}, target.CompanyID, taskstruct.ID, uint(priority), "存活", finger)
+			err = mysqldb.TargetsToDB([]string{urlentity.Url}, target.CompanyID, taskstruct.ID, uint(priority), "DirBruteComleted", finger)
 		}
 		if err != nil {
 			gologger.Error().Msgf("Failed to write dirbrute target: %s,url: %s", err.Error(), urlentity.Url)
+		}
+		//修改target状态为DirBruteComleted
+		err = mysqldb.ProcessTargetStatus(target, "DirBruteComleted")
+		if err != nil {
+			gologger.Error().Msg(err.Error())
 		}
 	}
 	err = mysqldb.ProcessTasks(taskstruct, "Completed")

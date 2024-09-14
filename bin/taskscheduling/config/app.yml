@@ -13,7 +13,7 @@ api:
 
 onlineapi:
   fofa: true
-  quake: false
+  quake: true
   hunter: true
 
 mysql:
@@ -32,9 +32,10 @@ splittodb:
   fofakeyword: 100
   hunterkeyword: 100
   quakekeyword: 100
-  #根据workflow个数
-  targets: 500
-  fingers: 100
+  #每个任务分配的数量
+  alivescan: 500
+  dirbrute: 100
+  activefingers: 200
 
 blacklist:
   - "online.nl"

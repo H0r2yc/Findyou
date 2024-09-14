@@ -11,8 +11,8 @@ import (
 	"unicode/utf8"
 )
 
-func HttpxActiveScan(protocol, bodydata string, url []string, headers map[string]string) workflowstruct.Urlentity {
-	var urlentity workflowstruct.Urlentity
+func HttpxActiveScan(protocol, bodydata string, url []string, headers map[string]string) []workflowstruct.Urlentity {
+	var urlentities []workflowstruct.Urlentity
 	options := runner.Options{
 		Methods:                   protocol,
 		InputTargetHost:           url,
@@ -35,6 +35,7 @@ func HttpxActiveScan(protocol, bodydata string, url []string, headers map[string
 		RandomAgent:               true,
 		Threads:                   100,
 		OnResult: func(resp runner.Result) {
+			var urlentity workflowstruct.Urlentity
 			// handle error
 			if resp.Err != nil {
 				gologger.Info().Msgf("请求错误: %s: %s\n", resp.Input, resp.Err)
@@ -60,6 +61,7 @@ func HttpxActiveScan(protocol, bodydata string, url []string, headers map[string
 			urlentity.Iconhash_md5 = resp.IconhashMd5
 			urlentity.Iconhash_mmh3 = resp.FavIconMMH3
 			urlentity.StatusCode = resp.StatusCode
+			urlentities = append(urlentities, urlentity)
 			gologger.Info().Msgf("[HTTPX-ACTIVE] [%d] %s [%s]\n", urlentity.StatusCode, urlentity.Url, urlentity.Title)
 		},
 	}
@@ -74,5 +76,5 @@ func HttpxActiveScan(protocol, bodydata string, url []string, headers map[string
 	defer httpxRunner.Close()
 
 	httpxRunner.RunEnumeration()
-	return urlentity
+	return urlentities
 }

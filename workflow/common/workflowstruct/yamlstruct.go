@@ -63,7 +63,6 @@ type Portscan struct {
 
 type Fingerprint struct {
 	IsScreenshot     bool     `yaml:"screenshot"`
-	EnableActiveScan bool     `yaml:"activeScan"`
 	IsFingerprintHub bool     `yaml:"fingerprinthub"`
 	IsFingerprintx   bool     `yaml:"fingerprintx"`
 	CustomDir        []string `yaml:"customdir"`

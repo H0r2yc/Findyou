@@ -37,7 +37,6 @@ fingerprint:
   dirsearch: true
   screenshot: true
   fingerprinthub: true
-  activeScan: false
   fingerprintx: true
 
 nuclei:

@@ -18,8 +18,9 @@ type Splittodb struct {
 	Fofakeyword   int `yaml:"fofakeyword"`
 	Hunterkeyword int `yaml:"hunterkeyword"`
 	Quakekeyword  int `yaml:"quakekeyword"`
-	Workflow      int `yaml:"targets"`
-	Fingers       int `yaml:"fingers"`
+	AliveScan     int `yaml:"alivescan"`
+	DirBrute      int `yaml:"dirbrute"`
+	ActiveFingers int `yaml:"activefingers"`
 }
 
 type OtherSet struct {

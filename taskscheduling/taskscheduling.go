@@ -60,15 +60,20 @@ func main() {
 				gologger.Error().Msg(err.Error())
 			}
 			//检查targets表并生成存活探测任务
-			err = dbmaketask.TargetsMakeTasks("Waiting", "ALIVEANDPASSIVITYSCAN", "WaitAliveScan", appconfig.Splittodb.Workflow)
+			err = dbmaketask.TargetsMakeTasks("Waiting", "ALIVEANDPASSIVITYSCAN", "WaitAliveScan", appconfig.Splittodb.AliveScan)
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
 			//检查targets表并生成目录列表和指纹识别任务
-			//err = dbmaketask.TargetsMakeTasks("存活", "FINGERPRINT", "WaitFinger", appconfig.Splittodb.Fingers)
-			//if err != nil {
-			//	gologger.Error().Msg(err.Error())
-			//}
+			err = dbmaketask.TargetsMakeTasks("存活", "DIRBRUTEANDPASSIVITYSCAN", "WaitDirBrute", appconfig.Splittodb.DirBrute)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			//检查targets表并生成主动指纹识别任务
+			err = dbmaketask.TargetsMakeTasks("DirBruteComleted", "ACTIVEFINGERPRINT", "WaitActiveFinger", appconfig.Splittodb.ActiveFingers)
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
 			//探测是否redis为空，如果为空那么就重新提交Pending任务和target的waitscan任务
 			if redisdb.RedisIsNull() {
 				gologger.Info().Msg("redis为空且有任务未完成，等待4分钟重新提交任务")
@@ -81,7 +86,7 @@ func main() {
 						gologger.Error().Msg(err.Error())
 					}
 					//检查targets表并生成存活探测任务
-					err = dbmaketask.TargetsMakeTasks("WaitAliveScan", "ALIVEANDPASSIVITYSCAN", "WaitAliveScan", appconfig.Splittodb.Workflow)
+					err = dbmaketask.TargetsMakeTasks("WaitAliveScan", "ALIVEANDPASSIVITYSCAN", "WaitAliveScan", appconfig.Splittodb.AliveScan)
 					if err != nil {
 						gologger.Error().Msg(err.Error())
 					}

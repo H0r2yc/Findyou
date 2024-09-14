@@ -15,7 +15,6 @@ func TestAliveAndPassivityScan(t *testing.T) {
 	appconfig := workflowstruct.Appconfig{
 		Fingerprint: workflowstruct.Fingerprint{
 			IsScreenshot:     false,
-			EnableActiveScan: true,
 			IsFingerprintHub: false,
 			IsFingerprintx:   false,
 			CustomDir:        nil,

@@ -33,7 +33,7 @@ func AliveAndPassivityScan(targets []string, appconfig *workflowstruct.Appconfig
 	gologger.Info().Msg("开始信息收集和被动指纹检测")
 	for _, urlentity := range urlentities {
 		//查找target
-		target, err := mysqldb.GetTargetID(urlentity.InputUrl)
+		target, err := mysqldb.GetTarget(urlentity.InputUrl)
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}

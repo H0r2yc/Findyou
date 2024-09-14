@@ -11,7 +11,7 @@ import (
 func TargetsMakeTasks(status, taskname, taskstatus string, listnum int) error {
 	rediscon := redisdb.GetRedisClient()
 	var taskcount int
-	var alivefingerlist []string
+	var newtargets []string
 	var splitslice [][]string
 	var tasks []mysqldb.Tasks
 	waittargets, err := mysqldb.GetTargets(status, true)
@@ -23,26 +23,30 @@ func TargetsMakeTasks(status, taskname, taskstatus string, listnum int) error {
 		return nil
 	}
 	for _, target := range waittargets {
-		alivefingerlist = append(alivefingerlist, target.Target)
+		if taskname == "ALIVEANDPASSIVITYSCAN" {
+			newtargets = append(newtargets, target.Target)
+		} else {
+			newtargets = append(newtargets, target.Url)
+		}
 	}
-	if len(alivefingerlist) != 0 {
-		if len(alivefingerlist) <= 200 {
+	if len(newtargets) != 0 {
+		if len(newtargets) <= 200 {
 			//写入keywords到tasks，状态waitting
-			tasks, err = mysqldb.WriteNoFindyouToTasks(alivefingerlist, taskname)
+			tasks, err = mysqldb.WriteNoFindyouToTasks(newtargets, taskname)
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
 			if tasks == nil {
 				return nil
 			}
-			err = redisdb.WriteDataToRedis(rediscon, taskname, alivefingerlist)
+			err = redisdb.WriteDataToRedis(rediscon, taskname, newtargets)
 			if err != nil {
 				fmt.Println("Error writing data to Redis:", err)
 				return err
 			}
 			taskcount = 1
 		} else {
-			splitslice = utils.SplitSlice(alivefingerlist, len(alivefingerlist)/listnum+1)
+			splitslice = utils.SplitSlice(newtargets, len(newtargets)/listnum+1)
 			taskcount = len(splitslice)
 			//写入alivelist到tasks，状态waitting
 			tasks, err = mysqldb.WriteTargetsToTasks(splitslice, len(splitslice), taskname)
@@ -72,6 +76,6 @@ func TargetsMakeTasks(status, taskname, taskstatus string, listnum int) error {
 			gologger.Error().Msg(err.Error())
 		}
 	}
-	gologger.Info().Msgf("[%d] 个target已生成 [%d] 个任务", len(waittargets), taskcount)
+	gologger.Info().Msgf("[%d] 个target已生成 [%d] 个[%s]任务", len(waittargets), taskcount, taskname)
 	return nil
 }

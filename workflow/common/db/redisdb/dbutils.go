@@ -50,6 +50,16 @@ func GetFromRedis(rediscon *redis.Client, appconfig *workflowstruct.Appconfig) (
 				continue
 			}
 		}
+		if key == "DIRBRUTEANDPASSIVITYSCAN" {
+			if !appconfig.Module.Dirbrute {
+				continue
+			}
+		}
+		if key == "ACTIVEFINGERPRINT" {
+			if !appconfig.Module.Fingerprint {
+				continue
+			}
+		}
 		// 执行 LPOP
 		val, err := rediscon.LPop(context.Background(), key).Result()
 		if err != nil {

@@ -240,9 +240,9 @@ func QuakeMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	var keyword string
 	for _, name := range targetlist.Target.Name {
 		if name != "" {
-			keyword = fmt.Sprintf("cert=\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", name, taskstruct.CompanyID[name])
+			keyword = fmt.Sprintf("cert:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", name, taskstruct.CompanyID[name])
 			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("web.title=\"%s\" AND title:\"系统\" AND NOT cert:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", name, name, taskstruct.CompanyID[name])
+			keyword = fmt.Sprintf("title:\"%s\" AND title:\"系统\" AND NOT cert:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", name, name, taskstruct.CompanyID[name])
 			searchlist = append(searchlist, keyword)
 		}
 	}
@@ -258,16 +258,16 @@ func QuakeMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	for _, domain := range targetlist.Target.Domain {
 		if domain != "" {
 			data := strings.SplitN(domain, ":", 2)
-			keyword = fmt.Sprintf("domain.suffix=\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("domain:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("cert=\"%s\" AND NOT domain:\"%s\" AND NOT host:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", data[0], data[0], data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("cert:\"%s\" AND NOT domain:\"%s\" AND NOT host:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", data[0], data[0], data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 		}
 	}
 	for _, cert := range targetlist.Target.Cert {
 		if cert != "" {
 			data := strings.SplitN(cert, ":", 2)
-			keyword = fmt.Sprintf("cert=\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("cert:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 
 		}
