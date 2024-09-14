@@ -1,0 +1,18 @@
+[
+  {
+    "path": "/",
+    "request_method": "get",
+    "request_headers": {
+      "Cookie": "rememberMe=admin;rememberMe-K=admin"
+    },
+    "request_data": "",
+    "status_code": 0,
+    "headers": {
+      "Set-Cookie": "rememberMe="
+    },
+    "keyword": [],
+    "favicon_hash": [],
+    "priority": 3,
+    "name": "shiro"
+  }
+]

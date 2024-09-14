@@ -83,7 +83,7 @@ func FOFASearch(datalist []string, appconfig *workflowstruct.Appconfig) {
 			gologger.Error().Msgf("找不到读取的companyid值，读取的内容为%s", data)
 			companyid = 0
 		}
-		err = mysqldb.TargetsToDB(result.Targets, uint(companyid), dbtask.ID)
+		err = mysqldb.TargetsToDB(result.Targets, uint(companyid), dbtask.ID, 0, "Waiting", "")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}

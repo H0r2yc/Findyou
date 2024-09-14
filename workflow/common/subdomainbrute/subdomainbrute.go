@@ -82,7 +82,7 @@ func SubdomainBrute(datas []string) error {
 				gologger.Error().Msgf("找不到读取的companyid值，读取的内容为%s", data)
 				companyid = 0
 			}
-			err = mysqldb.TargetsToDB(subdomains.Subdomains, uint(companyid), SubDomainTask.ID)
+			err = mysqldb.TargetsToDB(subdomains.Subdomains, uint(companyid), SubDomainTask.ID, 0, "Waiting", "")
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}

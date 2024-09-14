@@ -1,13 +1,13 @@
 package mysqldb
 
 // ProcessTargets 处理从数据库中取出的数据，并将 Status 设置为特定值
-func ProcessTargets(target *Targets, Title string, status string, fingerprint string, priority int) error {
+func ProcessTargets(target *Targets, Title string, status string, fingerprint string, url string, priority int) error {
 	db := GetDB()
 	mysqllock.Lock()
 	defer mysqllock.Unlock()
 	// 处理 targets
 	// 设置 Status 为 1
-	if err := db.Model(target).Updates(map[string]interface{}{"Status": status, "Title": Title, "FingerPrint": fingerprint, "Priority": uint(priority)}).Error; err != nil {
+	if err := db.Model(target).Updates(map[string]interface{}{"Status": status, "Title": Title, "FingerPrint": fingerprint, "Priority": uint(priority), "Url": url}).Error; err != nil {
 		return err
 	}
 	return nil

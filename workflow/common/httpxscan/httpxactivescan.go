@@ -1,4 +1,4 @@
-package httpxactivescan
+package httpxscan
 
 import (
 	"Findyou.WorkFlow/common/workflowstruct"

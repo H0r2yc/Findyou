@@ -12,7 +12,7 @@ import (
 
 var mysqllock sync.Mutex
 
-func TargetsToDB(TargetList []string, companyid, taskid uint) error {
+func TargetsToDB(TargetList []string, companyid, taskid, priorit uint, status, fingerprint string) error {
 	if len(TargetList) == 0 {
 		return nil
 	}
@@ -27,10 +27,12 @@ func TargetsToDB(TargetList []string, companyid, taskid uint) error {
 			continue
 		}
 		targetdb := Targets{
-			Target:    target,
-			CompanyID: companyid,
-			TaskID:    taskid,
-			Status:    "Waiting",
+			Target:      target,
+			CompanyID:   companyid,
+			TaskID:      taskid,
+			Status:      status,
+			FingerPrint: fingerprint,
+			Priority:    priorit,
 		}
 		err = WriteToTargets(database, targetdb)
 		if err != nil {

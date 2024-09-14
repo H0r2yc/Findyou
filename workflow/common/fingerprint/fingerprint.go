@@ -1,7 +1,7 @@
 package fingerprint
 
 import (
-	"Findyou.WorkFlow/common/httpxactivescan"
+	"Findyou.WorkFlow/common/httpxscan"
 	"Findyou.WorkFlow/common/utils"
 	"Findyou.WorkFlow/common/workflowstruct"
 	"github.com/projectdiscovery/gologger"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Fingerprint(urlentity workflowstruct.Urlentity, enableactivescan bool) (string, int, bool) {
+func Fingerprint(urlentity workflowstruct.Urlentity) (string, int, bool) {
 	var (
 		fingername []string
 		priority   int
@@ -22,7 +22,7 @@ func Fingerprint(urlentity workflowstruct.Urlentity, enableactivescan bool) (str
 			priority = finger.Priority
 			matched = true
 		}
-		if (finger.Path != "/" || len(finger.RequestHeaders) > 0 || finger.RequestData != "" || strings.ToLower(finger.RequestMethod) != "get") && enableactivescan {
+		if finger.Path != "/" || len(finger.RequestHeaders) > 0 || finger.RequestData != "" || strings.ToLower(finger.RequestMethod) != "get" {
 			var urls []string
 			if finger.Path != "/" {
 				// 解析URL
@@ -35,7 +35,7 @@ func Fingerprint(urlentity workflowstruct.Urlentity, enableactivescan bool) (str
 			} else {
 				urls = append(urls, urlentity.Url)
 			}
-			ActiveUrlentity := httpxactivescan.HttpxActiveScan(finger.RequestMethod, finger.RequestData, urls, finger.RequestHeaders)
+			ActiveUrlentity := httpxscan.HttpxActiveScan(finger.RequestMethod, finger.RequestData, urls, finger.RequestHeaders)
 			result2 := matchfinger(ActiveUrlentity, finger)
 			if result2 {
 				fingername = append(fingername, finger.Name)

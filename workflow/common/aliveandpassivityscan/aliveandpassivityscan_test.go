@@ -1,4 +1,4 @@
-package httpxscan
+package aliveandpassivityscan
 
 import (
 	"Findyou.WorkFlow/common/loadyaml"
@@ -9,15 +9,10 @@ import (
 )
 
 // 测试函数
-func TestHttpxscan(t *testing.T) {
+func TestAliveAndPassivityScan(t *testing.T) {
 	loadyaml.Loadyaml()
 	targetlist := []string{"http://39.104.77.27/seeyon/index.jsp"}
 	appconfig := workflowstruct.Appconfig{
-		Httpxconfig: workflowstruct.Httpx{
-			WebTimeout: 5,
-			WebThreads: 200,
-			HTTPProxy:  "",
-		},
 		Fingerprint: workflowstruct.Fingerprint{
 			IsScreenshot:     false,
 			EnableActiveScan: true,
@@ -26,11 +21,11 @@ func TestHttpxscan(t *testing.T) {
 			CustomDir:        nil,
 		},
 	}
-	Httpxscan(targetlist, &appconfig)
+	AliveAndPassivityScan(targetlist, &appconfig)
 }
 
 // 定义一个测试函数，用于测试某个方法
-func TestHttpxscan2(t *testing.T) {
+func TestAliveAndPassivityScan2(t *testing.T) {
 	loadyaml.Loadyaml()
 	targetlist := []string{"218.91.99.56"}
 	var fofasearchwordlist []string
@@ -58,5 +53,5 @@ func TestHttpxscan2(t *testing.T) {
 			HTTPProxy:  "",
 		},
 	}
-	Httpxscan(ipurllist, &appconfig)
+	AliveAndPassivityScan(ipurllist, &appconfig)
 }

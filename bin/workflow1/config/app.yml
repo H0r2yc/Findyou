@@ -35,10 +35,6 @@ httpx:
   WebTimeout: 10
 fingerprint:
   dirsearch: true
-  customdir:
-    - "/login"
-    - "/test"
-    - "/admin"
   screenshot: true
   fingerprinthub: true
   activeScan: false

@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+// 存活探测使用被动识别后的已经存活目标生成任务
 func main() {
 	fileWriter, err := NewFileWriter("taskscheduling.log")
 	if err != nil {

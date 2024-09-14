@@ -1,8 +1,8 @@
 package main
 
 import (
+	"Findyou.WorkFlow/common/aliveandpassivityscan"
 	"Findyou.WorkFlow/common/db/redisdb"
-	"Findyou.WorkFlow/common/httpxscan"
 	"Findyou.WorkFlow/common/loadyaml"
 	"Findyou.WorkFlow/common/onlineengine"
 	"Findyou.WorkFlow/common/subdomainbrute"
@@ -49,6 +49,7 @@ func Workflowrun() {
 			gologger.Error().Msg(err.Error())
 		}
 		switch key {
+		//爱企查和企查查模块可以结合icp以及app公众号信息都采集
 		case "AQCQCCSCAN":
 			gologger.Info().Msg("AQCQCCSCAN待实现")
 		case "FOFASEARCH":
@@ -63,9 +64,9 @@ func Workflowrun() {
 				gologger.Error().Msg(err.Error())
 			}
 		case "ALIVEANDPASSIVITYSCAN":
-			httpxscan.Httpxscan(value, appconfig)
-		case "DIRBRUTE":
-			gologger.Info().Msg("DIRBRUTE待实现,常规目录app,test,login,subdomain")
+			aliveandpassivityscan.AliveAndPassivityScan(value, appconfig)
+		case "DIRBRUTEANDACTIVEFINGER":
+			gologger.Info().Msg("DIRBRUTE待实现,常规目录app,home,login,subdomain")
 		default:
 			if key == "" && value == nil {
 				gologger.Info().Msgf("任务类型功能未开启，等待任务中...")

@@ -6,8 +6,7 @@ import (
 )
 
 var FingerPrints []Fingerprints
-
-var Dirs map[string][]string
+var ActiveFingerPrints []Fingerprints
 
 type Fingerprints struct {
 	Path           string            `yaml:"path"`

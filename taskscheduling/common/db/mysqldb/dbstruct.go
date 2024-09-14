@@ -70,6 +70,7 @@ type HighLevelTargets struct {
 type Targets struct {
 	ID          uint `gorm:"primaryKey"`
 	Target      string
+	Url         string
 	Title       string
 	FingerPrint string
 	Priority    uint
