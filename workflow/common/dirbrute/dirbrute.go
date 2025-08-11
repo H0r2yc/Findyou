@@ -7,6 +7,7 @@ import (
 	"Findyou.WorkFlow/common/workflowstruct"
 	"fmt"
 	"github.com/projectdiscovery/gologger"
+	"net"
 	"net/url"
 	"strings"
 )
@@ -81,7 +82,7 @@ func DirBrute(targets []string, appconfig *workflowstruct.Appconfig) {
 			highlevellist = append(highlevellist, highleveltarget)
 		}
 		if urlentity.StatusCode == 200 || finger != "" || urlentity.Title != "" {
-			err = mysqldb.TargetsToDB([]string{urlentity.Url}, target.CompanyID, taskstruct.ID, uint(priority), "DirBruteComleted", finger)
+			err = mysqldb.TargetsToDB([]string{urlentity.Url}, target.CompanyID, taskstruct.ID, 0, "DirBruteComleted", finger)
 		}
 		if err != nil {
 			gologger.Error().Msgf("Failed to write dirbrute target: %s,url: %s", err.Error(), urlentity.Url)
@@ -130,6 +131,11 @@ func extractSubdomainFromURL(inputURL string) (string, string, error) {
 	// 提取域名（不包括协议部分）
 	host := parsedURL.Host
 	rooturl := fmt.Sprintf("%s://%s", parsedURL.Scheme, host)
+
+	// 判断是否为IP地址
+	if isIP(host) {
+		return "", rooturl, nil
+	}
 	// 检查是否有子域名
 	subdomain := getSubdomain(host)
 	if subdomain != "" {
@@ -138,4 +144,9 @@ func extractSubdomainFromURL(inputURL string) (string, string, error) {
 
 	// 如果没有子域名或是根域名
 	return "", rooturl, nil
+}
+
+// 判断是否为IP地址
+func isIP(host string) bool {
+	return net.ParseIP(host) != nil
 }

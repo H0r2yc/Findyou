@@ -8,7 +8,7 @@ import (
 
 func TestSubfinder(t *testing.T) {
 	loadyaml.Loadyaml()
-	_, err := subfinder("xiaohongshu.com")
+	_, err := subfinder("xxx")
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 	}

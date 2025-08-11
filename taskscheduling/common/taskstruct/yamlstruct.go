@@ -12,6 +12,7 @@ type Appconfig struct {
 	Splittodb Splittodb `yaml:"splittodb"`
 	Mysql     Mysql     `yaml:"mysql"`
 	Redis     Redis     `yaml:"redis"`
+	BlackList []string  `yaml:"blacklist"`
 }
 
 type Splittodb struct {
@@ -24,8 +25,7 @@ type Splittodb struct {
 }
 
 type OtherSet struct {
-	DBScan       bool `yaml:"跳过配置从数据库扫描"`
-	DomainSearch bool `yaml:"生成扩展的domainsearch"`
+	DBScan bool `yaml:"跳过配置从数据库扫描"`
 }
 
 type API struct {

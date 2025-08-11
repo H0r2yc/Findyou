@@ -1,38 +1,38 @@
+#各个模块的启动/关闭
 module:
   fofasearch: true
-  huntersearch: false
-  quakesearch: false
+  huntersearch: true
+  quakesearch: true
   cdncheck: true
-  domainbrute: false
+  domainbrute: true
   aliveandpassivityscan: true
   dirbrute: true
   fingerprint: true
+  #pocscan未实现
   pocscan: true
 
 api:
   searchPageSize: 100
   searchLimitCount: 1000
   fofa:
-    #key: yiheng6221@163.com:093208d32a4b0202b925240b81e9b739
-    key: ying.hu@qingteng.cn:00954c8731415dfe6cd7f97820c4ce10
+    #key: xxx@163.com:1111111
+    key:
   icp:
     key: ""
   quake:
     key: ""
   hunter:
     key: ""
-portscan:
-  ping: false
-  port: --top-ports 1000
-  rate: 1000
-  tech: -sS
-  cmdbin: nmap
+#cdn检测并发数量
 cdnconfig:
   threads: 500
+
+#web探测
 httpx:
   HTTPProxy: ""
   WebThreads: 200
   WebTimeout: 10
+#指纹识别配置
 fingerprint:
   dirsearch: true
   customdir:
@@ -40,24 +40,12 @@ fingerprint:
     - "/test"
     - "/admin"
   screenshot: true
-  #fingerprintx是探测协议的
+  #fingerprintx是探测协议的，未实现
   fingerprintx: true
 
+#nuclei配置，暂未实现漏扫
 nuclei:
   Threads: 10
-
-domainscan:
-  resolver: resolver.txt
-  wordlist: subnames.txt
-  providerConfig: provider-workflowstruct.yml
-  subfinder: true
-  subdomainBrute: true
-  subdomainCrawler: false
-  ignoreCDN: false
-  ignoreOutofChina: true
-  portscan: false
-  whois: true
-  icp: true
 
 proxy:
   host: []
@@ -66,14 +54,9 @@ mysql:
   host: 127.0.0.1
   port: 3306
   name: Findyou
-  username: nbanb
-  password: nbanbpro
+  username: findyou
+  password: findyou
 
 redis:
   host: 127.0.0.1:6379
-  password: nbanbpro
-
-onlineapi:
-  fofa: true
-  quake: false
-  hunter: false
+  password: findyou

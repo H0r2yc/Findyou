@@ -3,6 +3,7 @@ package httpxscan
 import (
 	"Findyou.WorkFlow/common/workflowstruct"
 	"bytes"
+	"fmt"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/httpx/runner"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -27,15 +28,15 @@ func Httpxscan(targets []string, WebTimeout, WebThreads int, HTTPProxy string) (
 		TLSProbe:                  false,
 		FollowHostRedirects:       true,
 		MaxResponseBodySizeToRead: 1048576,
-		MaxRedirects:              5,
+		MaxRedirects:              2,
 		ExtractTitle:              true,
 		DisableStdin:              true,
 		Timeout:                   WebTimeout,
-		Retries:                   2,
-		HTTPProxy:                 HTTPProxy,
-		NoFallbackScheme:          true,
-		RandomAgent:               true,
-		Threads:                   WebThreads,
+		//Retries:                   2,
+		HTTPProxy:        HTTPProxy,
+		NoFallbackScheme: true,
+		RandomAgent:      true,
+		Threads:          WebThreads,
 		OnResult: func(resp runner.Result) {
 			var urlentity workflowstruct.Urlentity
 			// handle error
@@ -64,8 +65,12 @@ func Httpxscan(targets []string, WebTimeout, WebThreads int, HTTPProxy string) (
 			urlentity.Iconhash_md5 = resp.IconhashMd5
 			urlentity.Iconhash_mmh3 = resp.FavIconMMH3
 			urlentity.StatusCode = resp.StatusCode
+			urlentity.ContentLength = resp.ContentLength
 			urlentities = append(urlentities, urlentity)
 			ancnlist = append(ancnlist, resp.ACN...)
+			for _, ancn := range ancnlist {
+				fmt.Printf("从%s获取到ancn:%s", resp.URL, ancn)
+			}
 			gologger.Info().Msgf("[HTTPX] [%d] %s [%s]\n", urlentity.StatusCode, urlentity.Url, urlentity.Title)
 		},
 	}

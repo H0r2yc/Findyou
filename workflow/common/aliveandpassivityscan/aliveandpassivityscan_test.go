@@ -2,16 +2,17 @@ package aliveandpassivityscan
 
 import (
 	"Findyou.WorkFlow/common/loadyaml"
-	"Findyou.WorkFlow/common/onlineengine"
 	"Findyou.WorkFlow/common/workflowstruct"
-	"strings"
+	"bufio"
+	"fmt"
+	"os"
 	"testing"
 )
 
 // 测试函数
 func TestAliveAndPassivityScan(t *testing.T) {
 	loadyaml.Loadyaml()
-	targetlist := []string{"http://39.104.77.27/seeyon/index.jsp"}
+	targetlist := []string{"https://xxx"}
 	appconfig := workflowstruct.Appconfig{
 		Fingerprint: workflowstruct.Fingerprint{
 			IsScreenshot:     false,
@@ -23,34 +24,43 @@ func TestAliveAndPassivityScan(t *testing.T) {
 	AliveAndPassivityScan(targetlist, &appconfig)
 }
 
-// 定义一个测试函数，用于测试某个方法
-func TestAliveAndPassivityScan2(t *testing.T) {
+// 从本地文件直接探活+指纹识别
+func TestAliveAndPassivityScanFromFile(t *testing.T) {
 	loadyaml.Loadyaml()
-	targetlist := []string{"218.91.99.56"}
-	var fofasearchwordlist []string
-	// 每 10 条生成一个新的字符串
-	for i := 0; i < len(targetlist); i += 50 {
-		end := i + 50
-		if end > len(targetlist) {
-			end = len(targetlist)
-		}
-
-		// 生成字符串 xxx=target1||xxx=target2||...
-		sublist := targetlist[i:end]
-		joined := "ip=\"" + strings.Join(sublist, "\" || ip=\"") + "\""
-		fofasearchwordlist = append(fofasearchwordlist, joined)
+	filename := "C:\\Users\\Lenovo\\Desktop\\url.txt"
+	// 打开文件
+	file, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return
 	}
-	var ipurllist []string
-	for _, fofasearch := range fofasearchwordlist {
-		result := onlineengine.SearchFOFACore(fofasearch, "yiheng6221@163.com:73a981a7b5b4959fa50588051444021c", 9000, 100)
-		ipurllist = append(ipurllist, result.Targets...)
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+
+		}
+	}(file)
+
+	// 创建一个切片来存储每一行
+	var targetlist []string
+
+	// 使用bufio.Scanner按行读取文件
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		targetlist = append(targetlist, scanner.Text())
+	}
+	// 检查是否有读取错误
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error reading file:", err)
+		return
 	}
 	appconfig := workflowstruct.Appconfig{
-		Httpxconfig: workflowstruct.Httpx{
-			WebTimeout: 5,
-			WebThreads: 200,
-			HTTPProxy:  "",
+		Fingerprint: workflowstruct.Fingerprint{
+			IsScreenshot:     false,
+			IsFingerprintHub: false,
+			IsFingerprintx:   false,
+			CustomDir:        nil,
 		},
 	}
-	AliveAndPassivityScan(ipurllist, &appconfig)
+	AliveAndPassivityScan(targetlist, &appconfig)
 }

@@ -62,12 +62,10 @@ func DBFOFAMakeKeyword(targetconfig *taskstruct.Targetconfig, data, datatype str
 			}
 			//TODO 根据cert或者iconhash等等做匹配
 			//不能用系统，垃圾数据太多了
-			//searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
 		}
 		return "(" + strings.Join(searchlist, ") || (") + ")Findyou" + strconv.Itoa(int(companyid))
 	} else if datatype == "Domains" {
 		searchlist = append(searchlist, fmt.Sprintf("domain=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
-		searchlist = append(searchlist, fmt.Sprintf("cert=\"%s\" && domain!=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data, data))
 		return "(" + strings.Join(searchlist, ") || (") + ")Findyou" + strconv.Itoa(int(companyid))
 	} else {
 		return ""
@@ -88,19 +86,16 @@ func DBHUNTERMakeKeyword(targetconfig *taskstruct.Targetconfig, data, datatype s
 					for _, word := range words {
 						andword += fmt.Sprintf("&& web.title=\"%s\" ", word)
 					}
-					searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" %s&& ip.country=\"CN\" && ip.province=\"台湾\" && ip.province=\"香港\"", data, andword))
+					searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" %s&& ip.country=\"CN\" && ip.province!=\"台湾\" && ip.province!=\"香港\"", data, andword))
 				} else {
-					searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"%s\" && country=\"CN\" && ip.province=\"台湾\" && ip.province=\"香港\"", data, globalkeyword))
+					searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && web.title=\"%s\" && ip.country=\"CN\" && ip.province!=\"台湾\" && ip.province!=\"香港\"", data, globalkeyword))
 				}
 			}
 			//TODO 根据cert或者iconhash等等做匹配
-			//不能用系统，垃圾数据太多了
-			//searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
 		}
 		return "(" + strings.Join(searchlist, ") || (") + ")Findyou" + strconv.Itoa(int(companyid))
 	} else if datatype == "Domains" {
-		searchlist = append(searchlist, fmt.Sprintf("domain.suffix=\"%s\" && country=\"CN\" && ip.province=\"台湾\" && ip.province=\"香港\"", data))
-		searchlist = append(searchlist, fmt.Sprintf("cert=\"%s\" && domain!=\"%s\" && country=\"CN\" && ip.province=\"台湾\" && ip.province=\"香港\"", data, data))
+		searchlist = append(searchlist, fmt.Sprintf("domain.suffix=\"%s\" && country=\"CN\" && ip.province!=\"台湾\" && ip.province!=\"香港\"", data))
 		return "(" + strings.Join(searchlist, ") || (") + ")Findyou" + strconv.Itoa(int(companyid))
 	} else {
 		return ""
@@ -123,17 +118,14 @@ func DBQUAKEMakeKeyword(targetconfig *taskstruct.Targetconfig, data, datatype st
 					}
 					searchlist = append(searchlist, fmt.Sprintf("ip:\"%s/24\" %sAND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"", data, andword))
 				} else {
-					searchlist = append(searchlist, fmt.Sprintf("ip:\"%s/24\" AND title=\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"", data, globalkeyword))
+					searchlist = append(searchlist, fmt.Sprintf("ip:\"%s/24\" AND title:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"", data, globalkeyword))
 				}
 			}
 			//TODO 根据cert或者iconhash等等做匹配
-			//不能用系统，垃圾数据太多了
-			//searchlist = append(searchlist, fmt.Sprintf("ip=\"%s/24\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"", data))
 		}
 		return "(" + strings.Join(searchlist, ") OR (") + ")Findyou" + strconv.Itoa(int(companyid))
 	} else if datatype == "Domains" {
 		searchlist = append(searchlist, fmt.Sprintf("domain:\"%s\" AND country:\"CN\" AND NOT province_cn:\"台湾\" AND NOT province_cn:\"香港\"", data))
-		searchlist = append(searchlist, fmt.Sprintf("cert=\"%s\" AND NOT domain:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"", data, data))
 		return "(" + strings.Join(searchlist, ") OR (") + ")Findyou" + strconv.Itoa(int(companyid))
 	} else {
 		return ""
@@ -144,14 +136,14 @@ func DBQUAKEMakeKeyword(targetconfig *taskstruct.Targetconfig, data, datatype st
 func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	var searchlist []string
 	var keyword string
-	for _, name := range targetlist.Target.Name {
-		if name != "" {
-			keyword = fmt.Sprintf("cert=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", name, taskstruct.CompanyID[name])
-			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("title=\"%s\" && title=\"系统\" && cert!=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", name, name, taskstruct.CompanyID[name])
-			searchlist = append(searchlist, keyword)
+	/*
+		for _, name := range targetlist.Target.Name {
+			if name != "" {
+				keyword = fmt.Sprintf("title=\"%s\" && title=\"系统\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", name, taskstruct.CompanyID[name])
+				searchlist = append(searchlist, keyword)
+			}
 		}
-	}
+	*/
 	for _, ipcompany := range targetlist.Target.IP {
 		if ipcompany != "" {
 			data := strings.SplitN(ipcompany, ":", 2)
@@ -167,8 +159,6 @@ func FofaMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 			keyword = fmt.Sprintf("domain=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 			keyword = fmt.Sprintf("host=\"%s\" && domain!=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], data[0], taskstruct.CompanyID[data[1]])
-			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("cert=\"%s\" && domain!=\"%s\" && host!=\"%s\" && country=\"CN\" && region!=\"HK\" && region!=\"TW\"Findyou%d", data[0], data[0], data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 		}
 	}
@@ -194,16 +184,18 @@ func HunterMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	var keyword string
 	for _, name := range targetlist.Target.Name {
 		if name != "" {
-			keyword = fmt.Sprintf("icp.name=\"%s\" && ip.country=\"CN\" && ip.country!=\"HK\" && ip.country!=\"TW\"Findyou%d", name, taskstruct.CompanyID[name])
+			keyword = fmt.Sprintf("icp.name=\"%s\" && ip.country=\"CN\" && ip.province!=\"台湾\" && ip.province!=\"香港\"Findyou%d", name, taskstruct.CompanyID[name])
 			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("web.title=\"%s\" && web.title=\"系统\" && icp.name!=\"%s\" && ip.country=\"CN\" && ip.province=\"台湾\" && ip.province=\"香港\"Findyou%d", name, name, taskstruct.CompanyID[name])
-			searchlist = append(searchlist, keyword)
+			/*
+				keyword = fmt.Sprintf("web.title=\"%s\" && web.title=\"系统\" && icp.name!=\"%s\" && ip.country=\"CN\" && ip.province!=\"台湾\" && ip.province!=\"香港\"Findyou%d", name, name, taskstruct.CompanyID[name])
+				searchlist = append(searchlist, keyword)
+			*/
 		}
 	}
 	for _, ipcompany := range targetlist.Target.IP {
 		if ipcompany != "" {
 			data := strings.SplitN(ipcompany, ":", 2)
-			keyword = fmt.Sprintf("ip=\"%s\" && ip.country=\"CN\" && ip.province=\"台湾\" && ip.province=\"香港\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("ip=\"%s\" && ip.country=\"CN\" && ip.province!=\"台湾\" && ip.province!=\"香港\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 
 		}
@@ -212,16 +204,14 @@ func HunterMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	for _, domain := range targetlist.Target.Domain {
 		if domain != "" {
 			data := strings.SplitN(domain, ":", 2)
-			keyword = fmt.Sprintf("domain.suffix=\"%s\" && ip.country=\"CN\" && ip.province=\"台湾\" && ip.province=\"香港\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
-			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("cert=\"%s\" && domain!=\"%s\" && host!=\"%s\" && ip.country=\"CN\" && ip.province=\"台湾\" && ip.province=\"香港\"Findyou%d", data[0], data[0], data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("domain.suffix=\"%s\" && ip.country=\"CN\" && ip.province!=\"台湾\" && ip.province!=\"香港\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 		}
 	}
 	for _, cert := range targetlist.Target.Cert {
 		if cert != "" {
 			data := strings.SplitN(cert, ":", 2)
-			keyword = fmt.Sprintf("cert=\"%s\" && ip.country=\"CN\" && ip.province=\"台湾\" && ip.province=\"香港\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
+			keyword = fmt.Sprintf("cert=\"%s\" && ip.country=\"CN\" && ip.province!=\"台湾\" && ip.province!=\"香港\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 
 		}
@@ -238,14 +228,14 @@ func HunterMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 func QuakeMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 	var searchlist []string
 	var keyword string
-	for _, name := range targetlist.Target.Name {
-		if name != "" {
-			keyword = fmt.Sprintf("cert:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", name, taskstruct.CompanyID[name])
-			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("title:\"%s\" AND title:\"系统\" AND NOT cert:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", name, name, taskstruct.CompanyID[name])
-			searchlist = append(searchlist, keyword)
+	/*
+		for _, name := range targetlist.Target.Name {
+			if name != "" {
+				keyword = fmt.Sprintf("title:\"%s\" AND title:\"系统\"  AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", name, taskstruct.CompanyID[name])
+				searchlist = append(searchlist, keyword)
+			}
 		}
-	}
+	*/
 	for _, ipcompany := range targetlist.Target.IP {
 		if ipcompany != "" {
 			data := strings.SplitN(ipcompany, ":", 2)
@@ -259,8 +249,6 @@ func QuakeMakeKeyword(targetlist *taskstruct.Targetconfig) []string {
 		if domain != "" {
 			data := strings.SplitN(domain, ":", 2)
 			keyword = fmt.Sprintf("domain:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", data[0], taskstruct.CompanyID[data[1]])
-			searchlist = append(searchlist, keyword)
-			keyword = fmt.Sprintf("cert:\"%s\" AND NOT domain:\"%s\" AND NOT host:\"%s\" AND country:\"CN\" AND NOT province_cn:\"香港\" AND NOT province_cn:\"台湾\"Findyou%d", data[0], data[0], data[0], taskstruct.CompanyID[data[1]])
 			searchlist = append(searchlist, keyword)
 		}
 	}

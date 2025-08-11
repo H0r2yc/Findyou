@@ -127,6 +127,7 @@ func NewFileWriter(filename string) (*FileWriter, error) {
 // Write 将日志信息写入文件
 func (f *FileWriter) Write(data []byte, level levels.Level) {
 	f.file.Write(data)
+	f.file.WriteString("\n")
 }
 
 // ConsoleWriter 实现了 Writer 接口，并将日志信息写入控制台

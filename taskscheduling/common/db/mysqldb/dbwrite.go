@@ -34,17 +34,27 @@ func WriteToTasks(db *gorm.DB, tasks Tasks) error {
 
 func WriteStringListToTasks(stringlist []string, TaskName string) ([]Tasks, error) {
 	var tasks []Tasks
+	var companyid int
 	database := GetDB()
 	defer CloseDB(database)
 	if database == nil {
 		return nil, errors.New("获取数据库连接失败")
 	}
 	for _, keywords := range stringlist {
+		if keywords == "" {
+			continue
+		}
 		keyword := strings.SplitN(keywords, "Findyou", 2)
-		companyid, err := strconv.Atoi(keyword[1])
-		if err != nil {
+		if len(keyword) == 2 {
+			companyidpart, err := strconv.Atoi(keyword[1])
+			if err != nil {
+				companyid = 999
+				gologger.Error().Msg(err.Error())
+			} else {
+				companyid = companyidpart
+			}
+		} else {
 			companyid = 999
-			gologger.Error().Msg(err.Error())
 		}
 
 		exists, err := CheckDuplicateRecordInTask(database, "Task", TaskName, keyword[0])
@@ -54,7 +64,7 @@ func WriteStringListToTasks(stringlist []string, TaskName string) ([]Tasks, erro
 		if exists {
 			continue
 		}
-		id, err := GetNextID(database, "Tasks")
+		id, err := GetNextID(database, "tasks")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 			continue
@@ -86,7 +96,7 @@ func WriteNoFindyouToTasks(datas []string, TaskName string) ([]Tasks, error) {
 	if exists {
 		return tasks, nil
 	}
-	id, err := GetNextID(database, "Tasks")
+	id, err := GetNextID(database, "tasks")
 	if err != nil {
 		gologger.Error().Msg(err.Error())
 		return tasks, errors.New("获取不到下一个TaskID")
@@ -122,7 +132,7 @@ func WriteTargetsToTasks(TargetsList [][]string, ListSize int, TaskName string) 
 		if exists {
 			continue
 		}
-		id, err := GetNextID(database, "Tasks")
+		id, err := GetNextID(database, "tasks")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 			continue
@@ -139,7 +149,7 @@ func WriteTargetsToTasks(TargetsList [][]string, ListSize int, TaskName string) 
 	return tasks, nil
 }
 
-func WriteDataToKeywords(keywords []string) error {
+func WriteDataToKeywords(keywords []string, Onlineengine string) error {
 	database := GetDB()
 	if database.Error != nil {
 		return database.Error
@@ -153,7 +163,7 @@ func WriteDataToKeywords(keywords []string) error {
 			continue
 		}
 		keywordstruct := Keywords{
-			Onlineengine: "FOFA",
+			Onlineengine: Onlineengine,
 			Keyword:      keyword,
 		}
 		err = WriteToKeywords(database, keywordstruct)

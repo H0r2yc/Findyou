@@ -52,28 +52,41 @@ func FindInBody(body string) BodyData {
 		}
 		//这方面后面遇到再继续补充
 	}
-	if strings.Contains(body, "联系方式") || strings.Contains(body, "微信号") || strings.Contains(body, "客服电话") {
-		re := regexp.MustCompile(`0?(13[0-9]|15[012356789]|17[013678]|18[0-9]|14[57])[0-9]{8}`)
-		// 在 HTML 文本中查找备案号
+	if strings.Contains(body, "联系方式") || strings.Contains(body, "微信号") || strings.Contains(body, "电话：") || strings.Contains(body, "电话:") {
+		re := regexp.MustCompile(`电话(:|：)0?(13[0-9]|15[012356789]|17[013678]|18[0-9]|14[57])[0-9]{8}`)
 		matches := re.FindString(body)
-		// 如果找到匹配项，则输出备案号
 		if matches != "" {
 			Bodydata.PhoneNum = matches
-			gologger.Info().Msgf("联系方式:%s", matches)
+			gologger.Info().Msg(matches)
 		} else {
-			re = regexp.MustCompile(`0?(13[0-9]|15[012356789]|17[013678]|18[0-9]|14[57])[0-9]{8}`)
-			// 在 HTML 文本中查找备案号
+			re = regexp.MustCompile(`电话(:|：)\d{3}-?[0123456789]{8}`)
 			matches = re.FindString(body)
 			if matches != "" {
 				Bodydata.PhoneNum = matches
-				gologger.Info().Msgf("微信号:%s", matches)
+				gologger.Info().Msg(matches)
 			} else {
 				re = regexp.MustCompile(`0?(13[0-9]|15[012356789]|17[013678]|18[0-9]|14[57])[0-9]{8}`)
 				// 在 HTML 文本中查找备案号
 				matches = re.FindString(body)
 				if matches != "" {
 					Bodydata.PhoneNum = matches
-					gologger.Info().Msgf("客服电话:%s", matches)
+					gologger.Info().Msgf("微信号:%s", matches)
+				} else {
+					re = regexp.MustCompile(`0?(13[0-9]|15[012356789]|17[013678]|18[0-9]|14[57])[0-9]{8}`)
+					// 在 HTML 文本中查找备案号
+					matches = re.FindString(body)
+					if matches != "" {
+						Bodydata.PhoneNum = matches
+						gologger.Info().Msgf("客服电话:%s", matches)
+					} else {
+						re := regexp.MustCompile(`0?(13[0-9]|15[012356789]|17[013678]|18[0-9]|14[57])[0-9]{8}`)
+						// 在 HTML 文本中查找备案号
+						matches = re.FindString(body)
+						if matches != "" {
+							Bodydata.PhoneNum = matches
+							gologger.Info().Msgf("客服电话:%s", matches)
+						}
+					}
 				}
 			}
 		}

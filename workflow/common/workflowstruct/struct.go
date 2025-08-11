@@ -25,6 +25,7 @@ type Urlentity struct {
 	Url           string
 	InputUrl      string
 	Title         string
+	ContentLength int
 	Iconhash_md5  string
 	Iconhash_mmh3 string
 	Body          string

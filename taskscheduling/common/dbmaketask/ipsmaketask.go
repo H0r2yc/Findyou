@@ -13,8 +13,8 @@ import (
 func IPsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targetconfig) error {
 	rediscon := redisdb.GetRedisClient()
 	var fofakeywords []string
-	//var hunterkeywords []string
-	//var quakekeywords []string
+	var hunterkeywords []string
+	var quakekeywords []string
 	var splitslice [][]string
 	var taskcount int
 	waitips, err := mysqldb.GetAllIPs("Waiting", true)
@@ -26,10 +26,13 @@ func IPsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targe
 		return nil
 	}
 	for _, task := range waitips {
+		if task.IP == "" {
+			continue
+		}
 		keyword := makekeywords.Makekeywordfromdb(appconfig, targetconfig, task.IP, "IP", task.CompanyID)
 		fofakeywords = append(fofakeywords, keyword.FofaKeyWord)
-		//hunter
-		//quake
+		hunterkeywords = append(hunterkeywords, keyword.HunterKeyWord)
+		quakekeywords = append(quakekeywords, keyword.QuakeKeyWord)
 	}
 	if len(fofakeywords) != 0 {
 		//写入keywords到tasks，状态waitting
@@ -42,7 +45,7 @@ func IPsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targe
 		}
 		//写入处理过的纯keywords到keywords表
 		keywords := utils.TaskDataToKeywordData(fofakeywords)
-		err = mysqldb.WriteDataToKeywords(keywords)
+		err = mysqldb.WriteDataToKeywords(keywords, "FOFA")
 		if err != nil {
 			gologger.Error().Msg(err.Error())
 		}
@@ -57,6 +60,84 @@ func IPsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.Targe
 			splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword+1)
 			for i := 0; i < len(splitslice); i++ {
 				err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
+				if err != nil {
+					fmt.Println("Error writing data to Redis:", err)
+					return err
+				}
+			}
+		}
+		for _, keyword := range tasks {
+			err = mysqldb.UpdateTasksStatus(keyword, "Pending")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+		}
+	}
+	if len(hunterkeywords) != 0 {
+		//写入keywords到tasks，状态waitting
+		tasks, err := mysqldb.WriteStringListToTasks(hunterkeywords, "HUNTERSEARCH")
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
+		if tasks == nil {
+			return nil
+		}
+		//写入处理过的纯keywords到keywords表
+		keywords := utils.TaskDataToKeywordData(hunterkeywords)
+		err = mysqldb.WriteDataToKeywords(keywords, "HUNTER")
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
+		if len(hunterkeywords) <= 100 {
+			taskcount = 1
+			err = redisdb.WriteDataToRedis(rediscon, "HUNTERSEARCH", hunterkeywords)
+			if err != nil {
+				fmt.Println("Error writing data to Redis:", err)
+				return err
+			}
+		} else {
+			splitslice = utils.SplitSlice(hunterkeywords, len(hunterkeywords)/appconfig.Splittodb.Fofakeyword+1)
+			for i := 0; i < len(splitslice); i++ {
+				err = redisdb.WriteDataToRedis(rediscon, "HUNTERSEARCH", splitslice[i])
+				if err != nil {
+					fmt.Println("Error writing data to Redis:", err)
+					return err
+				}
+			}
+		}
+		for _, keyword := range tasks {
+			err = mysqldb.UpdateTasksStatus(keyword, "Pending")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+		}
+	}
+	if len(quakekeywords) != 0 {
+		//写入keywords到tasks，状态waitting
+		tasks, err := mysqldb.WriteStringListToTasks(quakekeywords, "QUAKESEARCH")
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
+		if tasks == nil {
+			return nil
+		}
+		//写入处理过的纯keywords到keywords表
+		keywords := utils.TaskDataToKeywordData(quakekeywords)
+		err = mysqldb.WriteDataToKeywords(keywords, "QUAKE")
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
+		if len(quakekeywords) <= 100 {
+			taskcount = 1
+			err = redisdb.WriteDataToRedis(rediscon, "QUAKESEARCH", quakekeywords)
+			if err != nil {
+				fmt.Println("Error writing data to Redis:", err)
+				return err
+			}
+		} else {
+			splitslice = utils.SplitSlice(quakekeywords, len(quakekeywords)/appconfig.Splittodb.Fofakeyword+1)
+			for i := 0; i < len(splitslice); i++ {
+				err = redisdb.WriteDataToRedis(rediscon, "QUAKESEARCH", splitslice[i])
 				if err != nil {
 					fmt.Println("Error writing data to Redis:", err)
 					return err

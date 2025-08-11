@@ -27,12 +27,23 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 	}
 	//生成搜索语句keywords和subdomainbrute列表
 	for _, domainstruct := range waitdomains {
-		if targetconfig.OtherSet.DomainSearch {
-			keyword := makekeywords.Makekeywordfromdb(appconfig, targetconfig, domainstruct.RootDomain, "Domains", domainstruct.CompanyID)
-			fofakeywords = append(fofakeywords, keyword.FofaKeyWord)
-			hunterkeywords = append(hunterkeywords, keyword.HunterKeyWords...)
-			quakekeywords = append(quakekeywords, keyword.QuakeKeyWords...)
+		isblack := false
+		for _, black := range appconfig.BlackList {
+			if domainstruct.RootDomain == black {
+				isblack = true
+			}
 		}
+		if isblack {
+			gologger.Error().Msg("检测到黑名单")
+			continue
+		}
+		if domainstruct.RootDomain == "" {
+			continue
+		}
+		keyword := makekeywords.Makekeywordfromdb(appconfig, targetconfig, domainstruct.RootDomain, "Domains", domainstruct.CompanyID)
+		fofakeywords = append(fofakeywords, keyword.FofaKeyWord)
+		hunterkeywords = append(hunterkeywords, keyword.HunterKeyWord)
+		quakekeywords = append(quakekeywords, keyword.QuakeKeyWord)
 		//生成domainbrute列表
 		subdomainbrute = append(subdomainbrute, domainstruct.RootDomain+"Findyou"+strconv.Itoa(int(domainstruct.CompanyID)))
 	}
@@ -56,7 +67,7 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 		if len(keywordtasks) != 0 {
 			//写入处理过的纯keywords到keywords表
 			keywords := utils.TaskDataToKeywordData(fofakeywords)
-			err = mysqldb.WriteDataToKeywords(keywords)
+			err = mysqldb.WriteDataToKeywords(keywords, "FOFA")
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
@@ -70,6 +81,99 @@ func Domainsmaketask(appconfig *taskstruct.Appconfig, targetconfig *taskstruct.T
 				splitslice = utils.SplitSlice(fofakeywords, len(fofakeywords)/appconfig.Splittodb.Fofakeyword+1)
 				for i := 0; i < len(splitslice); i++ {
 					err = redisdb.WriteDataToRedis(rediscon, "FOFASEARCH", splitslice[i])
+					if err != nil {
+						gologger.Error().Msgf("Error writing data to Redis:", err)
+						return err
+					}
+				}
+			}
+			for _, keyword := range keywordtasks {
+				err = mysqldb.UpdateTasksStatus(keyword, "Pending")
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
+			}
+		}
+
+	}
+	if len(hunterkeywords) != 0 {
+		fofakeywords = utils.RemoveDuplicateElement(hunterkeywords)
+		//写入keywords到tasks，状态waitting
+		keywordtasks, err := mysqldb.WriteStringListToTasks(hunterkeywords, "HUNTERSEARCH")
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
+		//如果fofakeywords和keywordtasks长度不一样，说明有部分fofakeyword之前写入过，所以要重新生成一个keyword
+		if len(keywordtasks) != len(hunterkeywords) {
+			hunterkeywords = []string{}
+			for _, keywordtask := range keywordtasks {
+				hunterkeywords = append(hunterkeywords, keywordtask.Task+"Findyou"+strconv.Itoa(int(keywordtask.CompanyID)))
+			}
+		}
+		//处理keywords
+		if len(keywordtasks) != 0 {
+			//写入处理过的纯keywords到keywords表
+			keywords := utils.TaskDataToKeywordData(hunterkeywords)
+			err = mysqldb.WriteDataToKeywords(keywords, "HUNTER")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			if len(hunterkeywords) <= 100 {
+				err = redisdb.WriteDataToRedis(rediscon, "HUNTERSEARCH", hunterkeywords)
+				if err != nil {
+					gologger.Error().Msgf("Error writing data to Redis:", err)
+					return err
+				}
+			} else {
+				splitslice = utils.SplitSlice(hunterkeywords, len(hunterkeywords)/appconfig.Splittodb.Fofakeyword+1)
+				for i := 0; i < len(splitslice); i++ {
+					err = redisdb.WriteDataToRedis(rediscon, "HUNTERSEARCH", splitslice[i])
+					if err != nil {
+						gologger.Error().Msgf("Error writing data to Redis:", err)
+						return err
+					}
+				}
+			}
+			for _, keyword := range keywordtasks {
+				err = mysqldb.UpdateTasksStatus(keyword, "Pending")
+				if err != nil {
+					gologger.Error().Msg(err.Error())
+				}
+			}
+		}
+	}
+	if len(quakekeywords) != 0 {
+		quakekeywords = utils.RemoveDuplicateElement(quakekeywords)
+		//写入keywords到tasks，状态waitting
+		keywordtasks, err := mysqldb.WriteStringListToTasks(quakekeywords, "QUAKESEARCH")
+		if err != nil {
+			gologger.Error().Msg(err.Error())
+		}
+		//如果fofakeywords和keywordtasks长度不一样，说明有部分fofakeyword之前写入过，所以要重新生成一个keyword
+		if len(keywordtasks) != len(quakekeywords) {
+			quakekeywords = []string{}
+			for _, keywordtask := range keywordtasks {
+				quakekeywords = append(quakekeywords, keywordtask.Task+"Findyou"+strconv.Itoa(int(keywordtask.CompanyID)))
+			}
+		}
+		//处理keywords
+		if len(keywordtasks) != 0 {
+			//写入处理过的纯keywords到keywords表
+			keywords := utils.TaskDataToKeywordData(quakekeywords)
+			err = mysqldb.WriteDataToKeywords(keywords, "QUAKE")
+			if err != nil {
+				gologger.Error().Msg(err.Error())
+			}
+			if len(quakekeywords) <= 100 {
+				err = redisdb.WriteDataToRedis(rediscon, "QUAKESEARCH", quakekeywords)
+				if err != nil {
+					gologger.Error().Msgf("Error writing data to Redis:", err)
+					return err
+				}
+			} else {
+				splitslice = utils.SplitSlice(quakekeywords, len(quakekeywords)/appconfig.Splittodb.Fofakeyword+1)
+				for i := 0; i < len(splitslice); i++ {
+					err = redisdb.WriteDataToRedis(rediscon, "QUAKESEARCH", splitslice[i])
 					if err != nil {
 						gologger.Error().Msgf("Error writing data to Redis:", err)
 						return err

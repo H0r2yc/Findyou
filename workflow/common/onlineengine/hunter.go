@@ -142,7 +142,7 @@ func SearchHunterCore(keyword, hunterkey string, maxQueryPage, cdnthread int) wo
 	}
 	opts := retryablehttp.DefaultOptionsSpraying
 	client := retryablehttp.NewClient(opts)
-	url := "https://hunter.qianxin.com/openApi/search"
+	hunterurl := "https://hunter.qianxin.com/openApi/search"
 	if hunterkey == "" {
 		gologger.Fatal().Msg("Hunter KEY为空")
 		targets.SearchStatus = 5
@@ -151,12 +151,11 @@ func SearchHunterCore(keyword, hunterkey string, maxQueryPage, cdnthread int) wo
 	page := 1
 	currentQueryCount := 0
 	for page <= maxQueryPage {
-		req, err := retryablehttp.NewRequest(http.MethodGet, url, nil)
+		req, err := retryablehttp.NewRequest(http.MethodGet, hunterurl, nil)
 		if err != nil {
 			gologger.Fatal().Msgf("Hunter API请求构建失败。")
 		}
-		unc := keyword
-		search := base64.StdEncoding.EncodeToString([]byte(unc))
+		search := base64.URLEncoding.EncodeToString([]byte(keyword))
 		q := req.URL.Query()
 		q.Add("search", search)
 		q.Add("api-key", hunterkey)
@@ -212,7 +211,7 @@ func SearchHunterCore(keyword, hunterkey string, maxQueryPage, cdnthread int) wo
 			return targets
 		}
 		if responseJson.Data.Total == 0 {
-			gologger.Error().Msgf("[HUNTER] %s 无结果。", keyword)
+			gologger.Info().Msgf("[HUNTER] %s 无结果。", keyword)
 			targets.SearchStatus = 1
 			return targets
 		}

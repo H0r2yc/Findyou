@@ -89,6 +89,10 @@ func DomainsToDB(domains []string, domainsip map[string][]string, companyid uint
 			gologger.Error().Msg(err.Error())
 		}
 		iscdn := len(domainsip[domain]) == 0
+		if rootdomain == "chpedu.net" {
+			gologger.Error().Msg("chpedu.net Find!!!\n")
+			continue
+		}
 		domainsdb := Domains{
 			Domain:     domain,
 			IP:         strings.Join(domainsip[domain], ","),
@@ -169,19 +173,6 @@ func CheckDuplicateRecord(database *gorm.DB, tableName string, columnName string
 	}
 
 	return false, nil
-}
-
-func GetNextTargetID(db *gorm.DB, table string) (uint, error) {
-	var maxID uint
-	// 查询数据库表中最大的 target ID
-	err := db.Table(table).Select("COALESCE(MAX(id), 0)").Scan(&maxID).Error
-	if err != nil {
-		return 0, err
-	}
-
-	// 下一个可用的 target ID 是最大的 target ID 加一
-	nextID := maxID + 1
-	return nextID, nil
 }
 
 func SensitiveInfoToDB(Url, PhoneNum, Supplychain, ICP string) error {

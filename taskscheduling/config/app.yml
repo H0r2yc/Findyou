@@ -1,9 +1,10 @@
 api:
+  #一次搜索的数据量大小
   searchPageSize: 100
   searchLimitCount: 1000
   fofa:
-    key: yiheng6221@163.com:093208d32a4b0202b925240b81e9b739
-  #key: ying.hu@qingteng.cn:00954c8731415dfe6cd7f97820c4ce10
+    #邮箱:apikey
+    key:
   icp:
     key: ""
   quake:
@@ -11,6 +12,7 @@ api:
   hunter:
     key: ""
 
+#设置是否启用fofa、quake、hunter搜索，启动后将生成对应的搜索引擎语法和搜索任务
 onlineapi:
   fofa: true
   quake: false
@@ -20,18 +22,17 @@ mysql:
   host: 127.0.0.1
   port: 3306
   name: Findyou
-  username: nbanb
-  password: nbanbpro
+  username: findyou
+  password: findyou
 
 redis:
   host: 127.0.0.1:6379
-  password: nbanbpro
+  password: findyou
 
-#写入redis的数据都分入几个库
+#写入到redis的任务根据多少数量进行分割
 splittodb:
   fofakeyword: 100
   hunterkeyword: 100
   quakekeyword: 100
-  #根据workflow个数
   targets: 500
   fingers: 100

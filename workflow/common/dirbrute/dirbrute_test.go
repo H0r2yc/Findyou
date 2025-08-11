@@ -9,7 +9,7 @@ import (
 // 测试函数
 func TestDirBrute(t *testing.T) {
 	loadyaml.Loadyaml()
-	targetlist := []string{"http://39.104.77.27/seeyon/index.jsp"}
+	targetlist := []string{"http://39.104.77.27"}
 	appconfig := workflowstruct.Appconfig{
 		Fingerprint: workflowstruct.Fingerprint{
 			IsScreenshot:     false,

@@ -202,7 +202,7 @@ func SearchQUAKECore(keyword, quakekey string, pageSize, cdnthread int) workflow
 	}
 	req.Header.Set("X-QuakeToken", quakekey)
 	req.Header.Set("Content-Type", "application/json")
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 5)
 
 	resp, errDo := client.Do(req)
 	if errDo != nil {

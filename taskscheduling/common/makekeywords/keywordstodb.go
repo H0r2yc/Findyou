@@ -37,7 +37,7 @@ func YAMLMakeTasksToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstruct
 			}
 			//写入处理过的纯keywords到keywords表
 			keywords := utils.TaskDataToKeywordData(KeyWords.FofaKeyWords)
-			err = mysqldb.WriteDataToKeywords(keywords)
+			err = mysqldb.WriteDataToKeywords(keywords, "FOFA")
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
@@ -102,7 +102,7 @@ func YAMLMakeTasksToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstruct
 			}
 			//写入处理过的纯keywords到keywords表
 			keywords := utils.TaskDataToKeywordData(KeyWords.QuakeKeyWords)
-			err = mysqldb.WriteDataToKeywords(keywords)
+			err = mysqldb.WriteDataToKeywords(keywords, "FOFA")
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
@@ -167,7 +167,7 @@ func YAMLMakeTasksToDB(appconfig *taskstruct.Appconfig, targetconfig *taskstruct
 			}
 			//写入处理过的纯keywords到keywords表
 			keywords := utils.TaskDataToKeywordData(KeyWords.HunterKeyWords)
-			err = mysqldb.WriteDataToKeywords(keywords)
+			err = mysqldb.WriteDataToKeywords(keywords, "FOFA")
 			if err != nil {
 				gologger.Error().Msg(err.Error())
 			}
