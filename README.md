@@ -24,7 +24,7 @@
 测试函数实现的小功能
 > workflow/common/aliveandpassivityscan/aliveandpassivityscan_test.go函数中实现直接从本地文件按行读取目标直接进行探活+指纹识别
 
-> workflow/common/cdn/cdn_test.go函数中实现了批量识别目标是否是cdn资产
+workflow/common/cdn/cdn_test.go函数中实现了批量识别目标是否是cdn资产
 
 
 ## 0x03 开发日志
