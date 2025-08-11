@@ -12,6 +12,7 @@
 
 ### 目前不足
 很多模块目前比较潦草，后续有时间慢慢优化，欢迎提交代码一起优化
+
 任务分发及数据存储目前均使用mysql+redis完成，后期可使用gorpc方便管理客户端及任务分发
 
 ## 0x02 安装使用
@@ -21,7 +22,8 @@
 4. 扫描结果在mysql中findyou数据库中，HighLevelTargets为可能存在漏洞的指纹，targets为所有目标信息，SensitiveInfo为供应链及社工钓鱼信息
 
 测试函数实现的小功能
-> workflow/common/aliveandpassivityscan/aliveandpassivityscan_test.go函数中实现了直接从本地文件按行读取目标直接进行探活+指纹识别
+> workflow/common/aliveandpassivityscan/aliveandpassivityscan_test.go函数中实现直接从本地文件按行读取目标直接进行探活+指纹识别
+
 > workflow/common/cdn/cdn_test.go函数中实现了批量识别目标是否是cdn资产
 
 
