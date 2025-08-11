@@ -21,10 +21,10 @@
 3. 配置taskscheduling下config文件夹中的target.yml相关信息，运行taskscheduling，然后启动workflow即可
 4. 扫描结果在mysql中findyou数据库中，HighLevelTargets为可能存在漏洞的指纹，targets为所有目标信息，SensitiveInfo为供应链及社工钓鱼信息
 
-测试函数实现的小功能
-> workflow/common/aliveandpassivityscan/aliveandpassivityscan_test.go函数中实现直接从本地文件按行读取目标直接进行探活+指纹识别
+测试函数实现的便捷功能
+> workflow/common/aliveandpassivityscan/aliveandpassivityscan_test.go函数中实现直接从本地文件按行读取目标直接进行探活+指纹识别  
 
-workflow/common/cdn/cdn_test.go函数中实现了批量识别目标是否是cdn资产
+> workflow/common/cdn/cdn_test.go函数中实现了批量识别目标是否是cdn资产  
 
 
 ## 0x03 开发日志
